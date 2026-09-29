@@ -91,6 +91,9 @@ select option{background:#12202c}
 [dir=rtl] .rng output{text-align:left}
 [dir=rtl] .sec h2,[dir=rtl] .rule .grp{letter-spacing:0}
 [dir=rtl] #v-he{direction:ltr}
+#talk{position:fixed;transform:translate(-50%,-100%);max-width:min(280px,80vw);padding:9px 12px 10px;background:rgba(250,246,236,.95);color:#1b1610;border-radius:12px;font-size:13.5px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:none;z-index:3}
+#talk b{display:block;font-family:var(--title);font-size:13px;color:#8a5a1a;margin-bottom:2px}
+#talk::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-top-color:rgba(250,246,236,.95);border-bottom:0}
 #hud-walk{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 3px #000;pointer-events:none}
 #where{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);font-size:13px;padding:5px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
 /* ---------- phones & small tablets ---------- */
@@ -186,6 +189,7 @@ select option{background:#12202c}
 </aside>
 
 <div id="story"><span class="x" id="story-x">✕</span><b>Rabbi Akiva's sukkah</b><br>Rabban Gamliel and Rabbi Akiva were sailing on a ship. Rabbi Akiva built a sukkah on the deck, and the next day the wind blew it away. Rabban Gamliel asked him, <i>“Akiva, where is your sukkah?”</i> — Sukkah 23a. The halacha follows Rabbi Akiva: a sukkah on a ship or a wagon is kosher, as long as it could stand in an ordinary wind on land.</div>
+<div id="talk" hidden></div>
 <div id="hud-walk" hidden></div><div id="where" hidden></div>
 <div id="hint">Drag to look around · scroll to zoom · click a rule for its source</div>
 <div id="cam"><button data-c="orbit" class="on" data-i18n="cOrbit">Orbit</button><button data-c="inside" data-i18n="cInside">Sit inside</button><button data-c="deck" data-i18n="cDeck">On deck</button><button data-c="sea" data-i18n="cSea">From the sea</button></div>
@@ -654,6 +658,7 @@ const WAVE_BASE = [
 ];
 const SEA_U = {
   uWaves: { value: WAVE_BASE.map(() => new THREE.Vector4()) },
+  uBoatInv: { value: new THREE.Matrix4() },
   uFlow: { value: SEA.flow }, uFoam: { value: 0.3 }, uSail: { value: 0 }, uTime: U.time,
 };
 function setSeaState(windKmh, sailing) {
@@ -717,11 +722,15 @@ function buildOcean() {
       .replace('#include <begin_vertex>', `vec3 transformed = position + disp;`)
       .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
         vSeaW = (modelMatrix * vec4(transformed, 1.0)).xyz;`);
-    sh.fragmentShader = `uniform float uFoam, uSail, uTime; uniform vec2 uFlow; varying vec3 vSeaW; varying float vCrest;
+    sh.fragmentShader = `uniform float uFoam, uSail, uTime; uniform vec2 uFlow; uniform mat4 uBoatInv; varying vec3 vSeaW; varying float vCrest;
+      float hullW(float z){ if (z < -17.0 || z > 17.0) return 0.0; if (z < -9.0) return 4.6 * pow(sin((z + 17.0) / 8.0 * 1.5708), 0.8); return 4.6; }
       float sh12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
       float svn(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f*f*(3.0-2.0*f); return mix(mix(sh12(i), sh12(i+vec2(1,0)), u.x), mix(sh12(i+vec2(0,1)), sh12(i+vec2(1,1)), u.x), u.y); }
       float foamN(vec2 p){ return svn(p) * 0.6 + svn(p * 2.3 + 7.1) * 0.4; }
 ` + sh.fragmentShader
+      .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+        vec3 inBoat = (uBoatInv * vec4(vSeaW, 1.0)).xyz;
+        if (abs(inBoat.x) < hullW(inBoat.z) - 0.1 && inBoat.y < 2.0) discard;`)
       .replace('#include <normal_fragment_maps>', `
         #ifdef USE_NORMALMAP
           vec2 ruv = (vSeaW.xz + uFlow) * 0.045 + vec2(uTime * 0.012, uTime * 0.007);
@@ -957,6 +966,7 @@ function buildBoat() {
   const deckMat = new THREE.MeshStandardMaterial({ ...dset, metalness: 0.25, color: 0x9ea79c });
   const shape = new THREE.Shape(); const hw0 = (z) => HULL_W(z) - 0.05;
   shape.moveTo(0, 16.6); for (let z = -16; z <= 17; z += 1) shape.lineTo(hw0(z), -z); for (let z = 17; z >= -16; z -= 1) shape.lineTo(-hw0(z), -z);
+  { const h = new THREE.Path(); const x0 = STAIRWELL.x0 - 0.05, x1 = STAIRWELL.x1 + 0.05, z0 = STAIRWELL.z0, z1 = STAIRWELL.z1 + 0.15; h.moveTo(x0, -z0); h.lineTo(x1, -z0); h.lineTo(x1, -z1); h.lineTo(x0, -z1); h.lineTo(x0, -z0); shape.holes.push(h); }
   const dg = new THREE.ShapeGeometry(shape); dg.rotateX(-Math.PI / 2);
   const uv = dg.attributes.uv, dp = dg.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, dp.getX(i) / 9.2, dp.getZ(i) / 34);
   const deck = new THREE.Mesh(dg, deckMat); deck.position.y = D; deck.receiveShadow = true; BOAT.root.add(deck);
@@ -1123,6 +1133,165 @@ function buildCabin(wh, steel, railM) {
   shadowed(C); C.traverse((o) => { if (o.material === glass) { o.castShadow = false; o.receiveShadow = false; } });
 }
 
+// ==== 06b_below.js
+// ---------------------------------------------------------------- below deck: companionway, passenger lounge, bunk cabins, engine room
+// boat-local coordinates; the main deck is at y = BOAT.deckY, the lower floor at BELOW.y
+const BELOW = { root: null, y: 0.12, fy: 0.12 - 2.1, x: 4.0, z0: -9.0, z1: 15.8, engines: [], lights: [] };
+const STAIRWELL = { x0: -3.85, x1: -2.8, z0: -6.2, z1: -3.4, n: 10 };
+const inStairwell = (x, z) => x > STAIRWELL.x0 && x < STAIRWELL.x1 && z > STAIRWELL.z0 && z < STAIRWELL.z1;
+
+function buildBelowDeck() {
+  const D = BOAT.deckY, Y = BELOW.y, CEIL = D - 0.1, H = CEIL - Y; // headroom ~1.88 m (feet on the deck above poke a little into the plate)
+  const G = new THREE.Group(); BOAT.root.add(G); BELOW.root = G;
+  const X = BELOW.x, Z0 = BELOW.z0, Z1 = BELOW.z1;
+  const paint = new THREE.MeshStandardMaterial({ color: 0xe9e6de, roughness: 0.7 });
+  const floorTex = TEX.wood.map.clone(); floorTex.needsUpdate = true; floorTex.repeat.set(3, 12);
+  const floorM = new THREE.MeshStandardMaterial({ color: 0x8a6a4a, map: floorTex, roughness: 0.7 });
+  const steelFloor = new THREE.MeshStandardMaterial({ color: 0x6d7478, roughness: 0.6, metalness: 0.5 });
+  const add = (geo, mat, x, y, z, parent = G) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.receiveShadow = true; parent.add(m); return m; };
+  const box = (w, h, d, mat, x, y, z, parent) => add(new THREE.BoxGeometry(w, h, d), mat, x, y, z, parent);
+  // floor (wood in the lounge + cabins, steel in the engine room)
+  box(2 * X, 0.06, 9.5 - Z0, floorM, 0, Y - 0.03, (Z0 + 9.5) / 2);
+  box(2 * X, 0.06, Z1 - 9.5, steelFloor, 0, Y - 0.03, (9.5 + Z1) / 2);
+  // ceiling under the deck, with the stairwell hole; it casts the deck's shadow down here
+  const cs = new THREE.Shape(); cs.moveTo(-X, Z0); cs.lineTo(X, Z0); cs.lineTo(X, Z1); cs.lineTo(-X, Z1); cs.lineTo(-X, Z0);
+  const hole = new THREE.Path(); hole.moveTo(STAIRWELL.x0 - 0.05, STAIRWELL.z0); hole.lineTo(STAIRWELL.x0 - 0.05, STAIRWELL.z1 + 0.15); hole.lineTo(STAIRWELL.x1 + 0.05, STAIRWELL.z1 + 0.15); hole.lineTo(STAIRWELL.x1 + 0.05, STAIRWELL.z0); cs.holes.push(hole);
+  const cg = new THREE.ShapeGeometry(cs); cg.rotateX(Math.PI / 2);
+  const ceil = add(cg, new THREE.MeshStandardMaterial({ color: 0xf2f0ea, roughness: 0.8, shadowSide: THREE.DoubleSide }), 0, CEIL, 0);
+  ceil.castShadow = true;
+  // hull lining, front and back bulkheads
+  for (const s of [-1, 1]) { const w = add(new THREE.PlaneGeometry(Z1 - Z0, H), paint, s * X, Y + H / 2, (Z0 + Z1) / 2); w.rotation.y = -s * Math.PI / 2; }
+  add(new THREE.PlaneGeometry(2 * X, H), paint, 0, Y + H / 2, Z0);
+  const bk = add(new THREE.PlaneGeometry(2 * X, H), paint, 0, Y + H / 2, Z1); bk.rotation.y = Math.PI;
+  // portholes: bright sea-and-sky discs on the lining, dark glass on the hull outside
+  const portIn = new THREE.MeshBasicMaterial({ map: paintTex(64, 64, (g) => { const gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, '#d9ecf7'); gr.addColorStop(0.55, '#a8cde4'); gr.addColorStop(0.56, '#2d6f93'); gr.addColorStop(1, '#174a6a'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }) });
+  const rimM = new THREE.MeshStandardMaterial({ color: 0xb8a060, metalness: 1, roughness: 0.3 });
+  const portOut = new THREE.MeshStandardMaterial({ color: 0x0c1a24, roughness: 0.05, metalness: 0.8 });
+  for (let z = Z0 + 1.2; z < Z1 - 0.5; z += 2.2) for (const s of [-1, 1]) {
+    const p = add(new THREE.CircleGeometry(0.17, 20), portIn, s * (X - 0.01), 1.5, z); p.rotation.y = -s * Math.PI / 2;
+    const r = add(new THREE.TorusGeometry(0.18, 0.025, 6, 20), rimM, s * (X - 0.02), 1.5, z); r.rotation.y = Math.PI / 2;
+    const o = new THREE.Mesh(new THREE.CircleGeometry(0.17, 20), portOut); o.position.set(s * (HULL_W(z) + 0.01), 1.5, z); o.rotation.y = s * Math.PI / 2; BOAT.root.add(o);
+  }
+  // ceiling lights
+  const lamp = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff0d6, emissiveIntensity: 1.4 });
+  for (let z = Z0 + 1.5; z < Z1; z += 3) for (const x of [-2, 2]) box(0.9, 0.03, 0.25, lamp, x, CEIL - 0.02, z);
+  // --- companionway housing on the main deck + the stairs down
+  const house = new THREE.Group(); BOAT.root.add(house); BELOW.house = house;
+  const hy = D, hh = 2.1;
+  const white = new THREE.MeshStandardMaterial({ color: 0xeceee9, roughness: 0.5, metalness: 0.2 });
+  box(0.08, hh, 3.0, white, -3.91, hy + hh / 2, -4.7, house); box(0.08, hh, 3.0, white, -2.74, hy + hh / 2, -4.7, house);
+  box(1.25, hh, 0.08, white, -3.33, hy + hh / 2, -6.2, house);
+  box(1.25, 0.08, 3.1, white, -3.33, hy + hh + 0.04, -4.7, house);
+  box(0.15, hh, 0.08, white, -3.84, hy + hh / 2, -3.2, house); box(0.12, hh, 0.08, white, -2.8, hy + hh / 2, -3.2, house);
+  box(1.25, 0.15, 0.08, white, -3.33, hy + hh - 0.075, -3.2, house);
+  const sign = add(new THREE.PlaneGeometry(0.9, 0.22), new THREE.MeshStandardMaterial({ map: paintTex(256, 64, (g) => { g.fillStyle = '#1d3a5c'; g.fillRect(0, 0, 256, 64); g.fillStyle = '#fff'; g.font = '700 26px Assistant'; g.textAlign = 'center'; g.fillText('▼ טרקלין · LOUNGE', 128, 42); }) }), -3.33, hy + hh - 0.25, -3.14, house);
+  const stepM = new THREE.MeshStandardMaterial({ color: 0x8b9398, roughness: 0.5, metalness: 0.6 });
+  const n = STAIRWELL.n, run = (STAIRWELL.z1 - STAIRWELL.z0) / n, rise = (D - Y) / n;
+  for (let i = 0; i < n; i++) box(STAIRWELL.x1 - STAIRWELL.x0, 0.05, run + 0.02, stepM, (STAIRWELL.x0 + STAIRWELL.x1) / 2, D - (i + 1) * rise - 0.025, STAIRWELL.z1 - (i + 0.5) * run, G);
+  const railM = new THREE.MeshStandardMaterial({ color: 0xd9dcd9, roughness: 0.3, metalness: 0.8 });
+  { const hr = add(new THREE.CylinderGeometry(0.02, 0.02, Math.hypot(D - Y, STAIRWELL.z1 - STAIRWELL.z0), 6), railM, STAIRWELL.x1 + 0.02, (D + Y) / 2 + 0.9, (STAIRWELL.z0 + STAIRWELL.z1) / 2); hr.rotation.x = Math.atan2(STAIRWELL.z1 - STAIRWELL.z0, D - Y); }
+
+  // --- passenger lounge: snack bar, tables with benches, a quiet corner with siddurim
+  const counterM = new THREE.MeshStandardMaterial({ color: 0x2d5f8a, roughness: 0.5 });
+  box(3.0, 1.0, 0.6, counterM, 0, Y + 0.5, Z0 + 0.65);
+  box(3.0, 0.05, 0.7, new THREE.MeshStandardMaterial({ color: 0xe8e2d4, roughness: 0.4 }), 0, Y + 1.02, Z0 + 0.65);
+  const fridge = box(0.8, 1.8, 0.5, new THREE.MeshStandardMaterial({ color: 0xdfe6ea, roughness: 0.2, metalness: 0.4, emissive: 0xaad8ff, emissiveIntensity: 0.25 }), -1.9, Y + 0.9, Z0 + 0.3);
+  const kiosk = add(new THREE.PlaneGeometry(2.4, 0.45), new THREE.MeshBasicMaterial({ map: paintTex(512, 96, (g) => { g.fillStyle = '#b3261e'; g.fillRect(0, 0, 512, 96); g.fillStyle = '#fff'; g.font = '800 44px Assistant'; g.textAlign = 'center'; g.fillText('קפטריה · CAFETERIA', 256, 64); }) }), 0, Y + 1.7, Z0 + 0.02);
+  for (let i = 0; i < 6; i++) box(0.07, 0.2, 0.07, new THREE.MeshStandardMaterial({ color: [0xd8352a, 0x2a8ad8, 0xf0b52f][i % 3], roughness: 0.3 }), -1.1 + i * 0.25, Y + 1.15, Z0 + 0.55); // drinks on the counter
+  const tableM = new THREE.MeshStandardMaterial({ color: 0xc9b08a, roughness: 0.5 });
+  const benchM = new THREE.MeshStandardMaterial({ color: 0x3b4f73, roughness: 0.8 });
+  BELOW.tables = [[2.6, -5.0], [2.6, -1.5], [-1.2, -5.2]];
+  for (const [x, z] of BELOW.tables) {
+    box(1.0, 0.04, 0.8, tableM, x, Y + 0.75, z); box(0.08, 0.73, 0.08, railM, x, Y + 0.37, z);
+    for (const s of [-1, 1]) box(1.0, 0.45, 0.4, benchM, x, Y + 0.225, z + s * 0.72);
+  }
+  // shesh-besh (backgammon) board on the middle table
+  const board = paintTex(256, 128, (g) => { g.fillStyle = '#6b3f1f'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#e8d3a6'; g.fillRect(8, 8, 116, 112); g.fillRect(132, 8, 116, 112); for (let i = 0; i < 12; i++) { const x = (i < 6 ? 8 : 132) + (i % 6) * 19.3; g.fillStyle = i & 1 ? '#8a1f1a' : '#1d3a5c'; g.beginPath(); g.moveTo(x, 8); g.lineTo(x + 9.6, 60); g.lineTo(x + 19.3, 8); g.fill(); g.beginPath(); g.moveTo(x, 120); g.lineTo(x + 9.6, 68); g.lineTo(x + 19.3, 120); g.fill(); } });
+  const bd = add(new THREE.BoxGeometry(0.5, 0.03, 0.3), new THREE.MeshStandardMaterial({ map: board, roughness: 0.6 }), 2.6, Y + 0.785, -1.5);
+  for (let i = 0; i < 14; i++) { const c = add(new THREE.CylinderGeometry(0.014, 0.014, 0.008, 12), new THREE.MeshStandardMaterial({ color: i & 1 ? 0xf5f1e6 : 0x1a1a1a, roughness: 0.4 }), 2.4 + (i % 7) * 0.05, Y + 0.806, -1.6 + (i < 7 ? 0 : 0.2)); }
+  // quiet corner: bookshelf of siddurim + a shtender
+  box(0.3, 1.4, 1.1, new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: 0.7 }), -X + 0.18, Y + 0.7, 0.9);
+  for (let i = 0; i < 16; i++) box(0.18, 0.2, 0.04, new THREE.MeshStandardMaterial({ color: [0x1d3a5c, 0x6b1f1c, 0x2f4a2a][i % 3], roughness: 0.8 }), -X + 0.2, Y + 0.45 + Math.floor(i / 8) * 0.45, 0.45 + (i % 8) * 0.12);
+  const sh = box(0.45, 0.06, 0.4, new THREE.MeshStandardMaterial({ color: 0x6b4526, roughness: 0.6 }), -2.55, Y + 1.1, 0.2); sh.rotation.z = 0.35;
+  box(0.06, 1.05, 0.3, sh.material, -2.5, Y + 0.53, 0.2);
+  const sid = box(0.14, 0.02, 0.2, new THREE.MeshStandardMaterial({ color: 0x1d3a5c }), -2.58, Y + 1.15, 0.2); sid.rotation.z = 0.35;
+
+  // --- cabins: a corridor with bunk rooms either side
+  const wallM = new THREE.MeshStandardMaterial({ color: 0xdcd6c8, roughness: 0.8 });
+  const CZ0 = 3.5, CZ1 = 9.5, doorZ0 = 5.9, doorZ1 = 6.7;
+  for (const s of [-1, 1]) {
+    box(X - 0.6, H, 0.06, wallM, s * (0.6 + (X - 0.6) / 2), Y + H / 2, CZ0);
+    box(0.06, H, doorZ0 - CZ0, wallM, s * 0.6, Y + H / 2, (CZ0 + doorZ0) / 2);
+    box(0.06, H, CZ1 - doorZ1, wallM, s * 0.6, Y + H / 2, (doorZ1 + CZ1) / 2);
+    box(0.06, H - 1.95, doorZ1 - doorZ0, wallM, s * 0.6, Y + 1.95 + (H - 1.95) / 2, (doorZ0 + doorZ1) / 2);
+    // bunk beds against the hull
+    for (const bz of [4.6, 8.2]) {
+      for (const by of [0.35, 1.25]) {
+        box(0.85, 0.12, 1.95, new THREE.MeshStandardMaterial({ color: 0x3f6fa8, roughness: 0.9 }), s * (X - 0.5), Y + by, bz);
+        box(0.5, 0.1, 0.3, new THREE.MeshStandardMaterial({ color: 0xf4f1ea, roughness: 1 }), s * (X - 0.5), Y + by + 0.1, bz - 0.75);
+      }
+      for (const dz of [-0.98, 0.98]) box(0.05, 1.55, 0.05, railM, s * (X - 0.95), Y + 0.78, bz + dz);
+      box(0.04, 0.04, 1.95, railM, s * (X - 0.95), Y + 1.55, bz);
+    }
+  }
+  // --- engine room behind a bulkhead
+  box(X - 0.5, H, 0.08, paint, -(0.5 + (X - 0.5) / 2), Y + H / 2, 9.5); box(X - 0.5, H, 0.08, paint, 0.5 + (X - 0.5) / 2, Y + H / 2, 9.5);
+  box(1.0, H - 1.95, 0.08, paint, 0, Y + 1.95 + (H - 1.95) / 2, 9.5);
+  const engM = new THREE.MeshStandardMaterial({ color: 0x3f7a55, roughness: 0.45, metalness: 0.5 });
+  const darkM = new THREE.MeshStandardMaterial({ color: 0x2a2d30, roughness: 0.5, metalness: 0.6 });
+  const redM = new THREE.MeshStandardMaterial({ color: 0xb8231c, roughness: 0.4, metalness: 0.4 });
+  for (const s of [-1, 1]) {
+    const e = new THREE.Group(); e.position.set(s * 1.75, Y, 12.6); G.add(e); BELOW.engines.push(e);
+    box(1.1, 0.3, 3.2, darkM, 0, 0.15, 0, e);
+    box(1.0, 0.8, 2.8, engM, 0, 0.7, 0, e);
+    for (let k = 0; k < 6; k++) box(0.34, 0.26, 0.34, engM, 0, 1.22, -1.1 + k * 0.44, e);
+    const ex = add(new THREE.CylinderGeometry(0.1, 0.1, H - 1.2, 12), darkM, s * -0.35, 1.2 + (H - 1.2) / 2, 1.2, e);
+    const fw = add(new THREE.CylinderGeometry(0.42, 0.42, 0.12, 24), redM, 0, 0.55, -1.5, e); fw.rotation.x = Math.PI / 2;
+    add(new THREE.BoxGeometry(0.6, 0.3, 0.02), new THREE.MeshStandardMaterial({ map: paintTex(128, 64, (g) => { g.fillStyle = '#ddd'; g.fillRect(0, 0, 128, 64); g.fillStyle = '#111'; g.font = '700 22px Assistant'; g.textAlign = 'center'; g.fillText('DIESEL 800 HP', 64, 40); }) }), 0, 0.75, 1.41, e);
+  }
+  // pipes along the engine room ceiling + control panel with gauges
+  const pipeM = new THREE.MeshStandardMaterial({ color: 0xc9a24a, roughness: 0.35, metalness: 0.9 });
+  for (const [x, c] of [[-1.6, pipeM], [-1.85, redM], [1.75, engM], [-3.2, pipeM]]) { const p = add(new THREE.CylinderGeometry(0.05, 0.05, Z1 - 9.6, 10), c, x, CEIL - 0.08, (9.6 + Z1) / 2); p.rotation.x = Math.PI / 2; }
+  box(2.2, 1.3, 0.25, darkM, 0, Y + 1.0, Z1 - 0.2);
+  const gaugeM = new THREE.MeshStandardMaterial({ color: 0xf2f2f2, emissive: 0xfff2d0, emissiveIntensity: 0.5 });
+  for (let i = 0; i < 5; i++) { const g = add(new THREE.CircleGeometry(0.1, 20), gaugeM, -0.8 + i * 0.4, Y + 1.3, Z1 - 0.34); g.rotation.y = Math.PI; }
+  for (let i = 0; i < 8; i++) { const l = add(new THREE.CircleGeometry(0.025, 10), new THREE.MeshStandardMaterial({ color: 0x1aff4a, emissive: i === 5 ? 0xff3a1a : 0x1aff4a, emissiveIntensity: 1.5 }), -0.7 + i * 0.2, Y + 0.9, Z1 - 0.34); l.rotation.y = Math.PI; }
+  add(new THREE.CylinderGeometry(0.08, 0.08, 0.5, 12), redM, X - 0.2, Y + 0.3, 10.2); // extinguisher
+  G.traverse((o) => { if (o.isMesh && o !== ceil) o.castShadow = false; });
+}
+
+// walkable layout below deck (y relative to the main deck, like the rest of WALK)
+function belowDeckColliders(box) {
+  const fy = BELOW.fy, top = 0;
+  const X = BELOW.x;
+  // companionway housing walls on the main deck (door on its +z side)
+  box(-3.95, -3.87, -6.2, -3.2, 0, 2.1); box(-2.78, -2.7, -6.2, -3.2, 0, 2.1); box(-3.95, -2.7, -6.25, -6.15, 0, 2.1);
+  box(-3.95, -3.8, -3.25, -3.15, 0, 2.1); box(-2.85, -2.7, -3.25, -3.15, 0, 2.1);
+  // the stairs: one box per step, each only as long as its own tread
+  const n = STAIRWELL.n, run = (STAIRWELL.z1 - STAIRWELL.z0) / n, rise = -fy / n;
+  for (let i = 0; i < n; i++) box(STAIRWELL.x0, STAIRWELL.x1, STAIRWELL.z1 - (i + 1) * run, STAIRWELL.z1 - i * run, fy, -(i + 1) * rise, 'stairs');
+  // lounge
+  box(-1.5, 1.5, BELOW.z0, BELOW.z0 + 0.95, fy, fy + 1.05); box(-2.3, -1.5, BELOW.z0, BELOW.z0 + 0.55, fy, fy + 1.8);
+  for (const [x, z] of BELOW.tables) { box(x - 0.5, x + 0.5, z - 0.4, z + 0.4, fy, fy + 0.77); for (const s of [-1, 1]) box(x - 0.5, x + 0.5, z + s * 0.72 - 0.2, z + s * 0.72 + 0.2, fy, fy + 0.45); }
+  box(-X, -X + 0.33, 0.35, 1.45, fy, fy + 1.4); box(-2.8, -2.4, 0.0, 0.4, fy, fy + 1.15);
+  // cabins
+  for (const s of [-1, 1]) {
+    const a = s * 0.6, b = s * X;
+    box(Math.min(a, b), Math.max(a, b), 3.47, 3.53, fy, top);
+    box(s * 0.57, s * 0.63, 3.5, 5.9, fy, top); box(s * 0.57, s * 0.63, 6.7, 9.5, fy, top);
+    for (const bz of [4.6, 8.2]) box(s * (X - 0.93), s * (X - 0.05), bz - 1.0, bz + 1.0, fy, fy + 1.6);
+  }
+  // engine room bulkhead (door in the middle) + engines + panel
+  box(-X, -0.5, 9.46, 9.54, fy, top); box(0.5, X, 9.46, 9.54, fy, top);
+  for (const s of [-1, 1]) box(s * 1.75 - 0.6, s * 1.75 + 0.6, 11.0, 14.2, fy, fy + 1.4);
+  box(-1.1, 1.1, BELOW.z1 - 0.35, BELOW.z1, fy, fy + 1.65);
+}
+function whereBelow(p) {
+  if (p.z > 9.5) return tt('Engine room', 'חדר המכונות');
+  if (p.z > 3.5) return tt('Cabins, below deck', 'תאי שינה, מתחת לסיפון');
+  return tt('Passenger lounge, below deck', 'טרקלין הנוסעים, מתחת לסיפון');
+}
+
 // ==== 07_vehicles.js
 // ---------------------------------------------------------------- vehicles: double-cab pickup ("sukkah-mobile") and a sedan with a roof rack
 function paintMat(color) { return new THREE.MeshPhysicalMaterial({ color, roughness: 0.32, metalness: 0.55, clearcoat: 1, clearcoatRoughness: 0.08 }); }
@@ -1214,6 +1383,492 @@ function makeSedan(color = 0xb9bec4) {
   return G;
 }
 
+// ==== 07b_people.js
+// ---------------------------------------------------------------- people (procedural, jointed) — ported from the courtyard RPG
+const NPCS = {};
+const NPC_LIST = [];
+
+let _fineWeave;
+function fabricMat(color, rough = 0.85) {
+  if (!_fineWeave) { _fineWeave = TEX.weave.normalMap.clone(); _fineWeave.needsUpdate = true; _fineWeave.repeat.set(10, 10); }
+  return new THREE.MeshStandardMaterial({ color, roughness: rough, normalMap: _fineWeave, normalScale: new THREE.Vector2(0.15, 0.15) });
+}
+function limb(r, len, mat, parent, y = 0) {
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, Math.max(0.001, len - 2 * r), 6, 12), mat);
+  m.position.y = -len / 2 + y; m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
+}
+function joint(parent, x, y, z) { const j = new THREE.Group(); j.position.set(x, y, z); parent.add(j); return j; }
+
+function makePerson(o) {
+  const H = o.height || 1.75, k = H / 1.75;
+  const skin = new THREE.MeshStandardMaterial({ color: o.skin || 0xd9a47e, roughness: 0.55 });
+  const shirt = fabricMat(o.shirt || 0xffffff);
+  const pants = fabricMat(o.pants || 0x22262e);
+  const shoe = new THREE.MeshStandardMaterial({ color: o.shoes || 0x1d1712, roughness: 0.45 });
+  const hairM = new THREE.MeshStandardMaterial({ color: o.hair || 0x2a1d14, roughness: 0.75 });
+  const root = new THREE.Group();
+  const P = { root, H, joints: {}, o };
+  const J = P.joints;
+  const legLen = 0.47 * H;
+  J.hips = joint(root, 0, legLen, 0);
+  // pelvis
+  const pel = new THREE.Mesh(new THREE.SphereGeometry(0.16 * k, 16, 12), o.skirt ? fabricMat(o.skirt) : pants); pel.scale.set(1, 0.62, 0.72) ; pel.castShadow = true; J.hips.add(pel);
+  // torso
+  J.spine = joint(J.hips, 0, 0.05 * k, 0);
+  const torsoH = 0.3 * H * (o.torsoMul || 1);
+  const belly = o.belly || 0;
+  const tp = [[0.0, 0], [0.15, 0], [0.16 + belly * 0.05, 0.08], [0.165 + belly * 0.07, 0.2], [0.17 + belly * 0.02, 0.36], [0.18, 0.44], [0.16, 0.5], [0.08, 0.53], [0.06, 0.54]].map(([x, y]) => new THREE.Vector2(x * k, y * k * (torsoH / (0.3 * 1.75)) * 0.98));
+  const torso = new THREE.Mesh(new THREE.LatheGeometry(tp, 20), o.top ? fabricMat(o.top) : shirt); torso.scale.z = 0.66 + belly * 0.15; torso.castShadow = true; torso.receiveShadow = true; J.spine.add(torso);
+  const tTop = tp[tp.length - 1].y;
+  // neck + head
+  J.neck = joint(J.spine, 0, tTop - 0.01 * k, 0.005);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.045 * k, 0.055 * k, 0.09 * k, 12), skin); neck.position.y = 0.035 * k; neck.castShadow = true; J.neck.add(neck);
+  J.head = joint(J.neck, 0, 0.035 * k, 0.015 * k);
+  buildHead(P, J.head, k, skin, hairM);
+  // arms
+  for (const s of [-1, 1]) {
+    const side = s < 0 ? 'L' : 'R';
+    const sh = joint(J.spine, s * 0.19 * k, tTop - 0.07 * k, 0);
+    const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.047 * k, 12, 10), o.top ? fabricMat(o.top) : shirt); shoulder.castShadow = true; sh.add(shoulder);
+    const upper = sh; limb(0.047 * k, 0.29 * k, o.sleeve === 'short' ? skin : (o.top ? fabricMat(o.top) : shirt), upper);
+    if (o.sleeve === 'short') { const sl = new THREE.Mesh(new THREE.CylinderGeometry(0.056 * k, 0.052 * k, 0.12 * k, 12), o.top ? fabricMat(o.top) : shirt); sl.position.y = -0.05 * k; sl.castShadow = true; sh.add(sl); }
+    const el = joint(sh, 0, -0.29 * k, 0);
+    limb(0.04 * k, 0.26 * k, o.sleeve === 'short' || o.sleeve === 'rolled' ? skin : (o.top ? fabricMat(o.top) : shirt), el);
+    if (o.sleeve === 'rolled') { const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.048 * k, 0.048 * k, 0.05 * k, 12), shirt); cuff.position.y = -0.02 * k; el.add(cuff); }
+    const wr = joint(el, 0, -0.26 * k, 0);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.042 * k, 10, 8), skin); hand.scale.set(0.75, 1.25, 0.5); hand.position.y = -0.045 * k; hand.castShadow = true; wr.add(hand);
+    const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.012 * k, 0.03 * k, 3, 6), skin); thumb.position.set(-s * 0.02 * k, -0.03 * k, 0.02 * k); thumb.rotation.z = s * 0.5; wr.add(thumb);
+    J['shoulder' + side] = sh; J['elbow' + side] = el; J['wrist' + side] = wr;
+    sh.rotation.z = s * 0.08;
+  }
+  // legs
+  for (const s of [-1, 1]) {
+    const side = s < 0 ? 'L' : 'R';
+    const hip = joint(J.hips, s * 0.09 * k, -0.02 * k, 0);
+    limb(0.07 * k, 0.245 * H, pants, hip);
+    const kn = joint(hip, 0, -0.245 * H, 0);
+    limb(0.055 * k, 0.23 * H, o.skirt ? skin : pants, kn);
+    const an = joint(kn, 0, -0.23 * H, 0);
+    const foot = new THREE.Mesh(new THREE.CapsuleGeometry(0.045 * k, 0.14 * k, 4, 8), shoe); foot.rotation.x = Math.PI / 2; foot.scale.set(1, 1, 0.75); foot.position.set(0, -0.025 * k, 0.05 * k); foot.castShadow = true; an.add(foot);
+    J['hip' + side] = hip; J['knee' + side] = kn; J['ankle' + side] = an;
+  }
+  // long skirt over legs
+  if (o.skirt) {
+    const sk = new THREE.Mesh(new THREE.CylinderGeometry(0.17 * k, 0.29 * k, o.skirtLen || 0.72 * k, 20, 4, true), new THREE.MeshStandardMaterial({ color: o.skirt, roughness: 0.9, side: THREE.DoubleSide }));
+    const sp = sk.geometry.attributes.position; for (let i = 0; i < sp.count; i++) { const a = Math.atan2(sp.getZ(i), sp.getX(i)); const f = (0.5 - sp.getY(i) / (o.skirtLen || 0.72 * k)); const r = 1 + Math.sin(a * 9) * 0.035 * f; sp.setX(i, sp.getX(i) * r); sp.setZ(i, sp.getZ(i) * r * 0.9); }
+    sk.geometry.computeVertexNormals();
+    sk.position.y = -(o.skirtLen || 0.72 * k) / 2 + 0.05; sk.castShadow = true; J.hips.add(sk); P.skirt = sk;
+  }
+  // tzitzit strings hanging at the hips
+  if (o.tzitzit) {
+    const tm = new THREE.MeshStandardMaterial({ color: 0xf6f4ee, roughness: 0.9 });
+    for (const s of [-1, 1]) for (let i = 0; i < 4; i++) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.0025, 0.0025, 0.3 * k, 3), tm); t.position.set(s * (0.15 + i * 0.006) * k, -0.12 * k, (i - 1.5) * 0.01); t.rotation.z = s * 0.05; J.hips.add(t); }
+  }
+  if (o.epaulettes) for (const s of [-1, 1]) { const ep = new THREE.Mesh(new THREE.BoxGeometry(0.1 * k, 0.012, 0.06 * k), new THREE.MeshStandardMaterial({ color: 0x1b2a44 })); ep.position.set(s * 0.15 * k, tTop - 0.035 * k, 0); J.spine.add(ep); for (let i = 0; i < 3; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.1 * k, 0.004, 0.008), new THREE.MeshStandardMaterial({ color: 0xe0b44a, metalness: 1, roughness: 0.3 })); b.position.set(s * 0.15 * k, tTop - 0.028 * k, -0.02 + i * 0.015); J.spine.add(b); } }
+  if (o.vest) { const v = new THREE.Mesh(new THREE.LatheGeometry(tp.slice(1, 7).map((p) => new THREE.Vector2(p.x * 1.05, p.y)), 20), new THREE.MeshStandardMaterial({ color: o.vest, roughness: 0.6, emissive: o.vest, emissiveIntensity: 0.12 })); v.scale.z = 0.72; J.spine.add(v); const st = new THREE.Mesh(new THREE.CylinderGeometry(0.172 * k, 0.172 * k, 0.03 * k, 20, 1, true), new THREE.MeshStandardMaterial({ color: 0xdfe6ea, metalness: 0.6, roughness: 0.2, side: THREE.DoubleSide })); st.scale.z = 0.72; st.position.y = tp[3].y; J.spine.add(st); }
+  if (o.apron) { const ap = new THREE.Mesh(new THREE.PlaneGeometry(0.34 * k, 0.55 * k), new THREE.MeshStandardMaterial({ color: o.apron, roughness: 0.9, side: THREE.DoubleSide })); ap.position.set(0, 0.05 * k, 0.13 * k + belly * 0.03); J.spine.add(ap); }
+  P.state = 'idle'; P.walkT = 0; P.blink = 2 + rand() * 3; P.look = 0; P.lookP = 0; P.gesture = 0; P.sitK = 0; P.pose = null;
+  P.speed = o.speed || 1.25; P.path = []; P.onArrive = null;
+  P.pos = root.position; P.heading = 0;
+  return P;
+}
+
+// sculpted head: a sphere pushed into a skull + jaw + chin, with brow, cheekbones, eye sockets and nose bridge
+const gauss = (dx, dy, s) => Math.exp(-(dx * dx + dy * dy) / (s * s));
+function makeHeadGeo(hs, o = {}) {
+  const g = new THREE.SphereGeometry(1, MOBILE ? 32 : 44, MOBILE ? 24 : 32);
+  const p = g.attributes.position;
+  const jawW = o.jawW || 1, chin = o.chin || 1;
+  for (let i = 0; i < p.count; i++) {
+    let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const front = Math.max(0, z);
+    // skull proportions
+    x *= 0.8; y *= 1.02; z *= 0.95;
+    if (z < 0) z *= 1.08; // occiput
+    // jaw narrows towards the chin
+    if (y < 0.05) { const t = Math.min(1, (0.05 - y) / 1.0); x *= 1 - 0.36 * Math.pow(t, 1.4) * jawW; z *= 1 - 0.12 * t; if (front > 0.2) z += 0.07 * chin * smooth(0.45, 0.95, -y) * front; }
+    // flatter sides of the head
+    x *= 1 - 0.06 * Math.pow(Math.abs(p.getX(i)), 3);
+    // brow ridge, cheekbones, nose bridge, eye sockets, under-lip dip
+    if (front > 0.3) {
+      z += 0.035 * gauss(x, y - 0.22, 0.28) * front;
+      z += 0.05 * gauss(Math.abs(x) - 0.38, y + 0.12, 0.16) * front;
+      z += 0.07 * gauss(x * 2.2, y + 0.05, 0.22) * front;
+      z -= 0.055 * gauss(Math.abs(x) - 0.27, y - 0.06, 0.12) * front;
+      z -= 0.025 * gauss(x * 1.6, y + 0.52, 0.18) * front;
+    }
+    p.setXYZ(i, x * hs, y * hs, z * hs);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+// copy the triangles of a head geometry whose centroid passes keep(x,y,z) (normalised), pushed out along the normal
+function shellOf(geo, hs, scale, keep) {
+  const src = geo.index ? geo.toNonIndexed() : geo;
+  const P = src.attributes.position, N = src.attributes.normal;
+  const pos = [], nor = [];
+  for (let t = 0; t < P.count; t += 3) {
+    const cx = (P.getX(t) + P.getX(t + 1) + P.getX(t + 2)) / 3 / hs, cy = (P.getY(t) + P.getY(t + 1) + P.getY(t + 2)) / 3 / hs, cz = (P.getZ(t) + P.getZ(t + 1) + P.getZ(t + 2)) / 3 / hs;
+    if (!keep(cx, cy, cz)) continue;
+    for (let k = 0; k < 3; k++) {
+      const nx = N.getX(t + k), ny = N.getY(t + k), nz = N.getZ(t + k);
+      const s = typeof scale === 'function' ? scale(P.getX(t + k) / hs, P.getY(t + k) / hs, P.getZ(t + k) / hs) : scale;
+      pos.push(P.getX(t + k) + nx * s * hs, P.getY(t + k) + ny * s * hs, P.getZ(t + k) + nz * s * hs); nor.push(nx, ny, nz);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  return g;
+}
+
+function buildHead(P, headJ, k, skin, hairM) {
+  const o = P.o;
+  const hs = 0.112 * k * (o.headMul || 1);
+  const head = joint(headJ, 0, hs * 0.9, 0);
+  const geo = makeHeadGeo(hs, { jawW: o.female ? 1.15 : 1, chin: o.female ? 0.7 : 1 });
+  const skull = new THREE.Mesh(geo, skin); skull.castShadow = true; skull.receiveShadow = true; head.add(skull);
+  // approx face surface z at normalised x,y
+  const fz = (x, y) => Math.sqrt(Math.max(0, 1 - x * x - y * y)) * 0.95 * hs;
+  // eyes: small, set into the sockets, with lids
+  const white = new THREE.MeshStandardMaterial({ color: 0xeee8e0, roughness: 0.25 });
+  const iris = new THREE.MeshStandardMaterial({ color: o.eyes || 0x3b2a1c, roughness: 0.2 });
+  const pupil = new THREE.MeshStandardMaterial({ color: 0x080606, roughness: 0.1 });
+  const lidM = new THREE.MeshStandardMaterial({ color: new THREE.Color(o.skin || 0xd9a47e).multiplyScalar(0.9), roughness: 0.6 });
+  P.eyes = [];
+  for (const s of [-1, 1]) {
+    const ex = s * 0.28, ey = 0.06;
+    const e = new THREE.Mesh(new THREE.SphereGeometry(hs * 0.1, 16, 12), white); e.position.set(ex * hs, ey * hs, fz(ex / 0.8, ey) - hs * 0.09); e.scale.set(1, 0.85, 1); head.add(e);
+    const ir = new THREE.Mesh(new THREE.SphereGeometry(hs * 0.052, 14, 10), iris); ir.position.set(0, 0, hs * 0.07); ir.scale.z = 0.5; e.add(ir);
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(hs * 0.024, 10, 8), pupil); pu.position.set(0, 0, hs * 0.094); pu.scale.z = 0.4; e.add(pu);
+    const lid = new THREE.Mesh(new THREE.SphereGeometry(hs * 0.108, 16, 8, 0, TAU, 0, Math.PI * 0.3), lidM); lid.position.copy(e.position); lid.rotation.x = -0.1; head.add(lid);
+    const low = new THREE.Mesh(new THREE.SphereGeometry(hs * 0.105, 16, 6, 0, TAU, Math.PI * 0.7, Math.PI * 0.3), lidM); low.position.copy(e.position); head.add(low);
+    const brow = new THREE.Mesh(new THREE.CapsuleGeometry(hs * 0.028, hs * 0.2, 4, 8), new THREE.MeshStandardMaterial({ color: o.brows || o.hair || 0x2a1d14, roughness: 0.95 }));
+    brow.rotation.z = Math.PI / 2 - s * 0.12; brow.position.set(s * 0.29 * hs, 0.24 * hs, fz(0.36, 0.24) + hs * 0.01); head.add(brow);
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(hs * 0.2, 12, 10), skin); ear.scale.set(0.28, 1, 0.62); ear.position.set(s * hs * 0.8, hs * 0.02, -hs * 0.05); ear.rotation.y = s * 0.3; head.add(ear);
+    P.eyes.push(e, lid);
+  }
+  // nose: bridge + tip + wings
+  const nose = new THREE.Mesh(new THREE.CapsuleGeometry(hs * 0.055, hs * 0.2, 4, 10), skin); nose.position.set(0, -0.12 * hs, fz(0, -0.12) + hs * 0.04); nose.rotation.x = 0.35; nose.scale.set(1, 1, 0.9); head.add(nose);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(hs * 0.075, 12, 10), skin); tip.position.set(0, -0.25 * hs, fz(0, -0.25) + hs * 0.085); head.add(tip);
+  for (const s of [-1, 1]) { const w = new THREE.Mesh(new THREE.SphereGeometry(hs * 0.055, 10, 8), skin); w.position.set(s * hs * 0.08, -0.28 * hs, fz(0.1, -0.28) + hs * 0.035); head.add(w); }
+  // lips
+  const lipM = new THREE.MeshStandardMaterial({ color: new THREE.Color(o.skin || 0xd9a47e).lerp(new THREE.Color(o.female ? 0xb04a4a : 0x9a5a50), 0.45), roughness: 0.45 });
+  const upper = new THREE.Mesh(new THREE.CapsuleGeometry(hs * 0.032, hs * 0.2, 4, 10), lipM); upper.rotation.z = Math.PI / 2; upper.position.set(0, -0.42 * hs, fz(0, -0.42) + hs * 0.005); upper.scale.set(1, 1, 0.7); head.add(upper);
+  const lower = new THREE.Mesh(new THREE.CapsuleGeometry(hs * 0.036, hs * 0.17, 4, 10), lipM); lower.rotation.z = Math.PI / 2; lower.position.set(0, -0.5 * hs, fz(0, -0.5)); lower.scale.set(1, 1, 0.7); head.add(lower);
+  P.mouth = lower; P.mouthBase = lower.position.y;
+  // hair: a shell over the scalp with a hairline, fuller at the back
+  if (!o.bald) {
+    const hl = o.longHair ? -0.6 : -0.25;
+    const hair = new THREE.Mesh(shellOf(geo, hs, (x, y, z) => 0.05 + (z < 0 ? 0.03 : 0) + Math.max(0, y) * 0.03, (x, y, z) => (y > 0.38 - Math.max(0, -z) * 0.2 && !(z > 0.55 && y < 0.62)) || (z < -0.1 && y > hl) || (Math.abs(x) > 0.62 && y > 0.05 && z < 0.3)), hairM);
+    head.add(hair);
+  }
+  if (o.ponytail) {
+    const pt = new THREE.Mesh(new THREE.CapsuleGeometry(hs * 0.16, hs * 0.75, 4, 10), hairM); pt.position.set(0, hs * 0.15, -hs * 1.05); pt.rotation.x = 0.35; head.add(pt); P.ponytail = pt;
+    const tie = new THREE.Mesh(new THREE.TorusGeometry(hs * 0.14, hs * 0.04, 6, 12), new THREE.MeshStandardMaterial({ color: 0xe0407a })); tie.position.set(0, hs * 0.5, -hs * 0.95); tie.rotation.x = 1.2; head.add(tie);
+  }
+  if (o.beard) {
+    const bm = new THREE.MeshStandardMaterial({ color: o.beard, roughness: 1 });
+    // full beard on jaw, chin and lower cheeks, leaving the lips clear
+    const b = new THREE.Mesh(shellOf(geo, hs, (x, y, z) => 0.045 + Math.max(0, -y - 0.45) * 0.25, (x, y, z) => y < -0.12 - Math.max(0, z - 0.4) * 0.1 && z > -0.45 && !(Math.abs(x) < 0.2 && y > -0.62 && y < -0.33 && z > 0.6)), bm);
+    head.add(b);
+    const mus = new THREE.Mesh(new THREE.CapsuleGeometry(hs * 0.04, hs * 0.26, 4, 8), bm); mus.rotation.z = Math.PI / 2; mus.position.set(0, -0.35 * hs, fz(0, -0.35) + hs * 0.04); head.add(mus);
+  }
+  if (o.mustache) { const mus = new THREE.Mesh(new THREE.CapsuleGeometry(hs * 0.045, hs * 0.3, 4, 8), new THREE.MeshStandardMaterial({ color: o.mustache, roughness: 0.95 })); mus.rotation.z = Math.PI / 2; mus.position.set(0, -0.35 * hs, fz(0, -0.35) + hs * 0.045); head.add(mus); }
+  if (o.kippah) {
+    // knitted kippah: a small shallow cap on the crown, towards the back
+    const kp = new THREE.Mesh(new THREE.SphereGeometry(hs * 1.08, 24, 6, 0, TAU, 0, 0.42), new THREE.MeshStandardMaterial({ map: TEX.kippah, roughness: 0.95 }));
+    kp.position.set(0, -hs * 0.06, -hs * 0.05); kp.rotation.x = -0.42; head.add(kp);
+  }
+  if (o.tichel) {
+    // head scarf over the hair, gathered into a knot at the nape
+    const tm = fabricMat(o.tichel, 0.9);
+    const t = new THREE.Mesh(shellOf(geo, hs, (x, y, z) => 0.07 + Math.max(0, -z) * 0.08 + Math.max(0, y) * 0.03, (x, y, z) => (y > 0.36) || (z < 0.25 && y > -0.45) || (Math.abs(x) > 0.55 && y > -0.2 && z < 0.45)), tm);
+    head.add(t);
+    const knot = new THREE.Mesh(new THREE.SphereGeometry(hs * 0.42, 14, 10), tm); knot.position.set(0, -hs * 0.1, -hs * 1.02); knot.scale.set(1.15, 0.85, 0.75); head.add(knot);
+    const tail = new THREE.Mesh(new THREE.CapsuleGeometry(hs * 0.14, hs * 0.5, 4, 8), tm); tail.position.set(hs * 0.1, -hs * 0.5, -hs * 1.0); tail.rotation.z = 0.2; head.add(tail);
+  }
+  if (o.captainHat) {
+    const white = new THREE.MeshStandardMaterial({ color: 0xf4f4f0, roughness: 0.6 }), black = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(hs * 0.86, hs * 0.84, hs * 0.3, 24), black); band.position.set(0, hs * 0.62, -hs * 0.05); head.add(band);
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(hs * 1.05, hs * 0.86, hs * 0.26, 24), white); crown.position.set(0, hs * 0.88, -hs * 0.08); crown.rotation.x = -0.08; head.add(crown);
+    const peak = new THREE.Mesh(new THREE.CylinderGeometry(hs * 0.7, hs * 0.7, hs * 0.04, 20, 1, false, -Math.PI / 2, Math.PI), black); peak.position.set(0, hs * 0.5, hs * 0.55); peak.rotation.x = 0.35; head.add(peak);
+    const badge = new THREE.Mesh(new THREE.SphereGeometry(hs * 0.12, 10, 6), new THREE.MeshStandardMaterial({ color: 0xe0b44a, metalness: 1, roughness: 0.3 })); badge.scale.z = 0.3; badge.position.set(0, hs * 0.68, hs * 0.84); head.add(badge);
+  }
+  if (o.fedora) {
+    const fm = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.7 });
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(hs * 1.55, hs * 1.55, hs * 0.05, 28), fm); brim.position.set(0, hs * 0.55, -hs * 0.02); brim.rotation.x = -0.06; head.add(brim);
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(hs * 0.82, hs * 0.95, hs * 0.72, 24), fm); crown.position.set(0, hs * 0.92, -hs * 0.04); head.add(crown);
+    const rib = new THREE.Mesh(new THREE.CylinderGeometry(hs * 0.955, hs * 0.955, hs * 0.14, 24), new THREE.MeshStandardMaterial({ color: 0x050505 })); rib.position.set(0, hs * 0.66, -hs * 0.04); head.add(rib);
+  }
+  if (o.hardHat) {
+    const hh = new THREE.Mesh(new THREE.SphereGeometry(hs * 1.12, 20, 10, 0, TAU, 0, Math.PI * 0.5), new THREE.MeshStandardMaterial({ color: o.hardHat, roughness: 0.4 })); hh.position.set(0, hs * 0.4, -hs * 0.03); head.add(hh);
+    const lip = new THREE.Mesh(new THREE.CylinderGeometry(hs * 1.22, hs * 1.22, hs * 0.04, 20), hh.material); lip.position.set(0, hs * 0.42, hs * 0.02); head.add(lip);
+  }
+  if (o.cap) {
+    const cm = new THREE.MeshStandardMaterial({ color: o.cap, roughness: 0.95 });
+    const c = new THREE.Mesh(shellOf(geo, hs, 0.07, (x, y, z) => y > 0.32 - Math.max(0, -z) * 0.25), cm); head.add(c);
+    const peak = new THREE.Mesh(new THREE.CylinderGeometry(hs * 0.62, hs * 0.62, hs * 0.04, 20, 1, false, -Math.PI / 2, Math.PI), cm); peak.position.set(0, hs * 0.52, hs * 0.62); peak.rotation.x = 0.25; head.add(peak);
+  }
+  if (o.glasses) {
+    const gm = new THREE.MeshStandardMaterial({ color: 0x6a5238, metalness: 0.5, roughness: 0.3 });
+    for (const s of [-1, 1]) {
+      const r = new THREE.Mesh(new THREE.TorusGeometry(hs * 0.15, hs * 0.015, 6, 20), gm); r.position.set(s * hs * 0.28, hs * 0.06, fz(0.35, 0.06) + hs * 0.05); head.add(r);
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(hs * 0.015, hs * 0.015, hs * 0.8), gm); arm.position.set(s * hs * 0.74, hs * 0.08, -hs * 0.2); head.add(arm);
+    }
+    const br = new THREE.Mesh(new THREE.BoxGeometry(hs * 0.12, hs * 0.018, hs * 0.018), gm); br.position.set(0, hs * 0.1, fz(0, 0.1) + hs * 0.07); head.add(br);
+  }
+  head.traverse((m) => { if (m.isMesh) m.castShadow = true; });
+}
+
+// merge each joint's static child meshes by material (fewer draw calls, same animation)
+function mergeRig(root, keep) {
+  const groups = []; root.traverse((o) => { if (!o.isMesh) groups.push(o); });
+  for (const g of groups) {
+    const by = new Map();
+    for (const c of g.children) {
+      if (!c.isMesh || keep.has(c) || c.children.length || Array.isArray(c.material)) continue;
+      const key = c.material.uuid + (c.castShadow ? 1 : 0);
+      if (!by.has(key)) by.set(key, []); by.get(key).push(c);
+    }
+    for (const list of by.values()) {
+      if (list.length < 2) continue;
+      const geos = list.map((c) => { c.updateMatrix(); let q = c.geometry.index ? c.geometry.toNonIndexed() : c.geometry.clone(); for (const n of Object.keys(q.attributes)) if (!['position', 'normal', 'uv'].includes(n)) q.deleteAttribute(n); if (!q.attributes.uv) q.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(q.attributes.position.count * 2), 2)); q.applyMatrix4(c.matrix); return fixNormals(q); });
+      const m = new THREE.Mesh(mergeGeometries(geos), list[0].material); m.receiveShadow = true;
+      g.add(m); for (const c of list) g.remove(c);
+    }
+  }
+}
+
+// ---- animation
+const _look = new THREE.Vector3();
+function animatePerson(P, dt, t) {
+  const J = P.joints;
+  const moving = P.path.length > 0;
+  // walking along a path
+  if (moving) {
+    const tgt = P.path[0];
+    const dx = tgt.x - P.pos.x, dz = tgt.z - P.pos.z, d = Math.hypot(dx, dz);
+    if (d < 0.08) { P.path.shift(); if (!P.path.length) { const cb = P.onArrive; P.onArrive = null; if (P.faceAfter != null) { P.targetHeading = P.faceAfter; P.faceAfter = null; } if (cb) cb(); } }
+    else {
+      const h = Math.atan2(dx, dz);
+      P.targetHeading = h;
+      const sp = Math.min(P.speed, d * 3 + 0.3);
+      P.pos.x += dx / d * sp * dt; P.pos.z += dz / d * sp * dt;
+      P.walkT += dt * sp * 5.2;
+    }
+  }
+  if (P.targetHeading != null) {
+    let dh = P.targetHeading - P.heading; while (dh > Math.PI) dh -= TAU; while (dh < -Math.PI) dh += TAU;
+    P.heading += dh * (1 - Math.exp(-dt * 8));
+  }
+  P.root.rotation.y = P.heading;
+  const walkK = moving ? 1 : 0;
+  P.walkBlend = damp(P.walkBlend || 0, walkK, 8, dt);
+  P.sitK = damp(P.sitK, P.state === 'sit' ? 1 : 0, 5, dt);
+  const wb = P.walkBlend, sw = Math.sin(P.walkT), sw2 = Math.cos(P.walkT);
+  const breathe = Math.sin(t * 1.6 + P.H * 10) * 0.012;
+  const legLen = 0.47 * P.H;
+  // hips height: bob while walking, drop when sitting
+  J.hips.position.y = lerp(legLen + Math.abs(sw2) * 0.025 * wb - 0.012 * wb, 0.47 * (P.H / 1.75) + 0.02, P.sitK);
+  J.hips.rotation.y = sw * 0.08 * wb;
+  const bend = P.pose === 'daven' || P.pose === 'siddur' ? 0.08 + Math.max(0, Math.sin(t * 3.4)) * 0.16 : P.pose === 'lean' ? 0.3 : P.pose === 'sick' ? 0.85 + Math.sin(t * 1.3) * 0.05 : P.pose === 'rope' || P.pose === 'wrench' ? 0.35 : 0;
+  J.spine.rotation.x = 0.03 * wb + breathe * 0.4 - P.sitK * 0.04 + (P.o.stoop || 0) + bend;
+  J.spine.rotation.y = -sw * 0.1 * wb;
+  J.spine.scale.set(1, 1 + breathe * 0.3, 1 + breathe);
+  for (const s of [-1, 1]) {
+    const side = s < 0 ? 'L' : 'R';
+    const ph = s < 0 ? sw : -sw;
+    J['hip' + side].rotation.x = lerp(ph * 0.5 * wb, -1.5, P.sitK);
+    const kneeBend = Math.max(0, -Math.sin(P.walkT + (s < 0 ? 0 : Math.PI) - 0.8)) * 0.9 * wb + 0.05;
+    J['knee' + side].rotation.x = lerp(kneeBend, 1.5, P.sitK);
+    J['ankle' + side].rotation.x = lerp(-ph * 0.2 * wb, 0.05, P.sitK);
+    J['hip' + side].rotation.z = lerp(0, s * -0.08, P.sitK);
+    // arms swing opposite the legs
+    const sh = J['shoulder' + side], el = J['elbow' + side];
+    let ax = -ph * 0.45 * wb + breathe * 0.5, az = s * (0.08 + Math.abs(breathe) * 0.5), ex = -0.15 - 0.25 * wb;
+    if (P.sitK > 0.01) { ax = lerp(ax, -0.5, P.sitK); ex = lerp(ex, -0.9, P.sitK); }
+    // talking gestures
+    if (P.gesture > 0 && s > 0) { ax += -0.6 - Math.sin(t * 3.1) * 0.2; ex += -0.8 + Math.sin(t * 4.3) * 0.2; }
+    if (P.gesture > 0 && s < 0) { ax += -0.2 + Math.sin(t * 2.3 + 1) * 0.1; }
+    // special poses
+    if (P.pose === 'kiddush' && s > 0) { ax = -1.2; ex = -1.3; az = 0.2; }
+    if (P.pose === 'candles') { ax = -1.25 + Math.sin(t * 2) * 0.15; ex = -1.0; az = s * (0.25 + Math.sin(t * 2) * 0.25); }
+    if (P.pose === 'shake') { ax = -1.1 + Math.sin(t * 9) * 0.25 * (s > 0 ? 1 : 0.5); ex = -1.0; az = s * 0.1; }
+    if (P.pose === 'hammer' && s > 0) { ax = -1.7 + Math.abs(Math.sin(t * 5)) * 0.9; ex = -0.9; }
+    if (P.pose === 'wave' && s > 0) { ax = -2.8; az = 0.2 + Math.sin(t * 9) * 0.3; ex = -0.3; }
+    if (P.pose === 'helm') { ax = -1.0 + Math.sin(t * 0.7 + s) * 0.06; ex = -0.55; az = s * 0.18; }
+    if (P.pose === 'lean') { ax = -1.0; ex = -0.25; az = s * 0.12; }
+    if (P.pose === 'sick') { ax = -1.25; ex = -0.2; az = s * 0.2; }
+    if (P.pose === 'photo') { ax = -1.45; ex = -1.55; az = s * 0.35; }
+    if (P.pose === 'tea' && s > 0) { ax = -0.55 + Math.max(0, Math.sin(t * 0.6)) * -0.5; ex = -1.75; }
+    if (P.pose === 'lulav') { if (s > 0) { ax = -0.95 + Math.sin(t * 1.3) * 0.05; ex = -0.9; } else { ax = -0.5; ex = -1.2; az = -0.25; } }
+    if (P.pose === 'rope') { ax = -0.75 + Math.sin(t * 2.2 + s) * 0.25; ex = -0.6 + Math.cos(t * 2.2) * 0.2; az = s * 0.15; }
+    if (P.pose === 'dice' && s > 0) { ax = -0.7 + Math.max(0, Math.sin(t * 1.7)) * -0.3; ex = -1.1; }
+    if (P.pose === 'siddur') { ax = -0.75; ex = -1.25; az = s * 0.22; }
+    if (P.pose === 'wrench' && s > 0) { ax = -1.1 + Math.sin(t * 3) * 0.2; ex = -0.7; }
+    sh.rotation.x = damp(sh.rotation.x, ax, 12, dt); sh.rotation.z = damp(sh.rotation.z, az, 12, dt); el.rotation.x = damp(el.rotation.x, ex, 12, dt);
+  }
+  // head: look at the player when close
+  if (P.root.parent) P.root.parent.worldToLocal(_look.copy(camera.position));
+  const dx = _look.x - P.pos.x, dz = _look.z - P.pos.z, dist = Math.hypot(dx, dz);
+  let want = 0, wantP = 0;
+  if (dist < 5 && !P.noLook) {
+    let rel = Math.atan2(dx, dz) - P.heading; while (rel > Math.PI) rel -= TAU; while (rel < -Math.PI) rel += TAU;
+    if (Math.abs(rel) < 1.9) { want = clamp(rel, -1.1, 1.1); wantP = -Math.atan2(_look.y - (P.pos.y + P.H * 0.93), dist) * 0.7; }
+  }
+  P.look = damp(P.look, want, 4, dt); P.lookP = damp(P.lookP, clamp(wantP, -0.5, 0.4), 4, dt);
+  J.neck.rotation.y = P.look * 0.4; J.head.rotation.y = P.look * 0.6;
+  J.head.rotation.x = P.lookP + Math.sin(t * 0.7 + P.H) * 0.02 + (P.gesture > 0 ? Math.sin(t * 5) * 0.03 : 0);
+  // blink
+  P.blink -= dt;
+  const bl = P.blink < 0.12 ? 0.1 : 1; if (P.blink < 0) P.blink = 2 + rand() * 4;
+  for (let i = 0; i < P.eyes.length; i += 2) { P.eyes[i].scale.y = 0.85 * bl; P.eyes[i + 1].rotation.x = bl < 1 ? 0.9 : -0.1; }
+  // mouth moves while talking
+  if (P.mouth) P.mouth.position.y = P.mouthBase - (P.gesture > 0 ? Math.abs(Math.sin(t * 13)) * 0.006 : 0);
+  if (P.ponytail) P.ponytail.rotation.x = 0.5 + sw * 0.2 * wb;
+  P.gesture = Math.max(0, P.gesture - dt);
+}
+
+function walkPath(P, pts, onArrive, faceAfter = null) { P.path = pts.map((p) => new THREE.Vector3(p[0], 0, p[1])); P.onArrive = onArrive || null; P.faceAfter = faceAfter; P.state = 'idle'; }
+function placeNPC(P, x, z, heading) { P.pos.set(x, 0, z); P.heading = heading; P.targetHeading = heading; P.path = []; }
+function faceTowards(P, x, z) { P.targetHeading = Math.atan2(x - P.pos.x, z - P.pos.z); }
+
+// big parts cast shadows, small face details don't
+function trimShadows(root) { root.traverse((o) => { if (!o.isMesh) return; o.geometry.computeBoundingSphere(); o.castShadow = !MOBILE && o.geometry.boundingSphere.radius > 0.07; }); }
+
+// ==== 07c_crew.js
+// ---------------------------------------------------------------- the people aboard: captain, crew and passengers (they talk when you come close)
+const CREW = [];
+const L = (en, he) => [en, he];
+
+function person(id, o, parent, x, y, z, heading, extra = {}) {
+  const P = makePerson(o); P.id = id; P.name = o.name; P.lines = o.lines || [];
+  P.root.position.set(x, y, z); P.heading = P.targetHeading = heading;
+  Object.assign(P, extra);
+  mergeRig(P.root, new Set([...P.eyes, P.mouth, P.ponytail, P.skirt].filter(Boolean)));
+  trimShadows(P.root);
+  parent.add(P.root); CREW.push(P);
+  return P;
+}
+function prop(P, joint, mesh, x, y, z, rx = 0, ry = 0, rz = 0) { mesh.position.set(x, y, z); mesh.rotation.set(rx, ry, rz); P.joints[joint].add(mesh); return mesh; }
+
+function buildCrew() {
+  const B = BOAT.root, D = BOAT.deckY, Y = BELOW.y;
+  // the captain at the helm
+  const cap = person('captain', {
+    name: L('Captain Moshe', 'רב־החובל משה'), height: 1.78, skin: 0xc98f66, shirt: 0xf6f6f2, pants: 0x1b2a44, hair: 0xb8b2a8, beard: 0xcfc9c0, captainHat: true, epaulettes: true, sleeve: 'short', belly: 0.5, eyes: 0x3a5a7a,
+    lines: [L('Welcome aboard the Rabbi Akiva! Mind the rolling deck.', 'ברוכים הבאים ל״רבי עקיבא״! היזהרו, הסיפון מתנדנד.'),
+      L('We’re off Yafo — the port where Yonah boarded his ship to Tarshish.', 'אנחנו מול יפו — הנמל שממנו יונה עלה לאנייה לתרשיש.'),
+      L('Your sukkah can stay on my deck — just keep it strapped down. Rabbi Akiva lost his to the wind!', 'הסוכה שלכם יכולה להישאר על הסיפון — רק שתהיה קשורה. של רבי עקיבא עפה ברוח!'),
+      L('Two diesels below, 800 horsepower each. Go down the hatch and see.', 'למטה יש שני מנועי דיזל, 800 כוח סוס כל אחד. רדו בפתח ותראו.')],
+  }, B, 2.0, D, 12.72, Math.PI, { pose: 'helm', noLook: true });
+  // Chabad sukkah-mobile volunteer with a lulav and etrog
+  const chabad = person('chabad', {
+    name: L('Mendy', 'מנדי'), height: 1.76, skin: 0xe0ac86, shirt: 0xf6f6f2, top: 0x16181c, pants: 0x16181c, hair: 0x241810, beard: 0x241810, fedora: true, tzitzit: true, eyes: 0x3a2818,
+    lines: [L('Chag sameach! Would you like to shake the lulav? Hold it with the etrog and say the bracha.', 'חג שמח! רוצים לנענע לולב? מחזיקים יחד עם האתרוג ומברכים.'),
+      L('Our sukkah-mobile goes anywhere — even to sea. A sukkah on a wagon is kosher!', 'הסוכה הניידת שלנו מגיעה לכל מקום — אפילו לים. סוכה על עגלה כשרה!'),
+      L('Come up into the sukkah — step on the stool, then the tailgate.', 'עלו לסוכה — על השרפרף ואז על הדלת האחורית.')],
+  }, B, 1.35, D, 4.2, 0.9, { pose: 'lulav' });
+  const green = new THREE.MeshStandardMaterial({ color: 0x6d8a3a, roughness: 0.5 });
+  prop(chabad, 'wristR', new THREE.Mesh(new THREE.BoxGeometry(0.025, 1.05, 0.03), green), 0, -0.07 - 0.276 * 0.4, 0.03 + 0.962 * 0.4, 1.85);
+  prop(chabad, 'wristL', new THREE.Mesh(new THREE.SphereGeometry(0.045, 14, 10), new THREE.MeshStandardMaterial({ color: 0xe9cf3a, roughness: 0.4 })), 0, -0.07, 0.04).scale.set(1, 1.35, 1);
+  // deckhand patrolling the bow
+  const hand = person('deckhand', {
+    name: L('Avi, deckhand', 'אבי, איש צוות'), height: 1.74, skin: 0xb8805a, shirt: 0x6d737a, pants: 0x2c3440, hair: 0x1a1410, vest: 0xf07a1a, hardHat: 0xf2c81b, sleeve: 'rolled', eyes: 0x2a2018,
+    lines: [L('Car strapped down? Good. Nothing moves on my deck.', 'הרכב קשור? יופי. על הסיפון שלי שום דבר לא זז.'),
+      L('The lounge and the cafeteria are down the hatch, by the stairs.', 'הטרקלין והקפטריה למטה, דרך הפתח עם המדרגות.'),
+      L('In a storm the canvas walls flap like flags — tie them tight.', 'בסערה דפנות הבד מתנופפות כמו דגלים — תקשרו חזק.')],
+  }, B, 2.2, D, -4.5, Math.PI, { speed: 1.1, route: [[2.3, -4.6, 'rope', 4], [2.3, -11.0, 'rope', 5], [-2.2, -11.0, null, 1], [-2.0, -7.0, null, 0.5], [-1.8, -5.3, null, 0]], leg: 0, wait: 2 });
+  // tourists at the port rail
+  person('tourist1', {
+    name: L('Dana', 'דנה'), female: true, height: 1.65, skin: 0xe8b894, top: 0x5aa0c8, skirt: 0x2b3a55, skirtLen: 0.55, sleeve: 'short', hair: 0x8a5a2a, longHair: true, eyes: 0x4a6a3a,
+    lines: [L('Can you take our picture with the sukkah?', 'אפשר לצלם אותנו עם הסוכה?'), L('Look, you can see Yafo from here!', 'תראו, רואים מכאן את יפו!')],
+  }, B, -3.75, D, 5.4, -Math.PI / 2, { pose: 'photo' });
+  person('tourist2', {
+    name: L('Tom', 'תום'), height: 1.82, skin: 0xf0c8a8, shirt: 0xe9e1c8, pants: 0x4a5a6a, hair: 0xd8b060, sleeve: 'short', eyes: 0x4a6a9a, cap: 0x2f4a6a,
+    lines: [L('First time on a boat with a sukkah on it. Only in Israel!', 'פעם ראשונה שאני על סירה עם סוכה. רק בישראל!')],
+  }, B, -3.75, D, 6.25, -Math.PI / 2, { pose: 'lean' });
+  prop(CREW[CREW.length - 2], 'wristR', new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.14, 0.01), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.5 })), 0, -0.08, 0.05);
+  // a kid running laps on the open deck
+  person('kid', {
+    name: L('Yoni', 'יוני'), height: 1.22, skin: 0xe6b28e, shirt: 0xd8352a, pants: 0x2f4a7a, hair: 0x3a2618, headMul: 1.15, sleeve: 'short', kippah: true, eyes: 0x3a2818, speed: 2.4,
+    lines: [L('Is that a sukkah on a TRUCK?! Cool!', 'זאת סוכה על טנדר?! מגניב!'), L('Race you to the front of the ship!', 'בוא נעשה תחרות עד חרטום הספינה!')],
+  }, B, -1.5, D, -2.5, 0, { loop: [[-2.1, -2.4], [2.1, -2.4], [2.3, -4.3], [-2.0, -4.3]], leg: 0 });
+  // seasick passenger — only there when someone is seasick (or it's stormy)
+  person('seasick', {
+    name: L('Uncle Shmulik', 'הדוד שמוליק'), height: 1.72, skin: 0xc8d0a8, shirt: 0x8a9aa8, pants: 0x3a3a3a, hair: 0x5a5048, mustache: 0x5a5048, belly: 0.8, eyes: 0x2a2018,
+    lines: [L('Ugh… I’m a mitztaer. The halacha says I’m exempt from the sukkah right now.', 'אוף… אני מצטער. ההלכה אומרת שאני פטור מהסוכה עכשיו.'), L('Don’t talk to me about food.', 'אל תדברו איתי על אוכל.')],
+  }, B, 3.85, D, -1.0, Math.PI / 2, { pose: 'sick', noLook: true, onlyIf: () => CFG.seasick || CFG.wind >= 45 });
+  // cabin: a passenger with tea
+  person('tea', {
+    name: L('Savta Rivka', 'סבתא רבקה'), female: true, height: 1.58, skin: 0xe2b494, top: 0x7a4a6a, skirt: 0x3a3440, skirtLen: 0.66, hair: 0xd8d4cc, glasses: true, tichel: 0x2d4f7c, stoop: 0.08, eyes: 0x5a4a3a,
+    lines: [L('A cup of tea? It helps with the seasickness.', 'כוס תה? זה עוזר נגד מחלת ים.'), L('When I was young we crossed from Cyprus on a ship like this one.', 'כשהייתי צעירה עלינו מקפריסין בספינה כמו זאת.')],
+  }, B, -1.4, D + 0.04, 16.63, Math.PI, { state: 'sit', pose: 'tea' });
+  prop(CREW[CREW.length - 1], 'wristR', new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.07, 12), new THREE.MeshStandardMaterial({ color: 0xf4f1ea, roughness: 0.3 })), 0, -0.07, 0.04);
+  // --- below deck
+  const low = BELOW.root;
+  person('shesh1', { name: L('Itzik', 'איציק'), height: 1.75, skin: 0xb8805a, shirt: 0xf2f2ee, pants: 0x2a2a2a, hair: 0x1a1410, sleeve: 'short', kippah: true, mustache: 0x1a1410, eyes: 0x2a2018,
+    lines: [L('Shesh-besh! Sit, sit, you play the winner.', 'שש־בש! שבו, שבו, אתם משחקים נגד המנצח.'), L('Double sixes! Did you see that?', 'שש־שש! ראיתם את זה?')] }, low, 2.6, Y, -2.28, 0, { state: 'sit', pose: 'dice' });
+  person('shesh2', { name: L('Nissim', 'ניסים'), height: 1.7, skin: 0xa8704a, shirt: 0x6a8aa8, pants: 0x3a3a3a, hair: 0x6a6460, belly: 0.6, eyes: 0x2a2018,
+    lines: [L('He only wins because the boat is rocking.', 'הוא מנצח רק כי הסירה מתנדנדת.')] }, low, 2.6, Y, -0.72, Math.PI, { state: 'sit', pose: 'dice' });
+  person('davener', { name: L('Reb Yaakov', 'ר׳ יעקב'), height: 1.74, skin: 0xe0ac86, shirt: 0xf6f6f2, pants: 0x16181c, hair: 0x5a4a3a, beard: 0x8a8580, kippah: true, tzitzit: true, glasses: true, eyes: 0x3a2818,
+    lines: [L('(davening quietly, facing Jerusalem — east of here)', '(מתפלל בשקט, פונה לירושלים — מזרחה מכאן)')] }, low, -3.05, Y, 0.2, Math.PI / 2, { pose: 'siddur', noLook: true });
+  person('kiosk', { name: L('Orit, cafeteria', 'אורית, הקפטריה'), female: true, height: 1.64, skin: 0xd9a47e, top: 0xb3261e, skirt: 0x2b2f3a, skirtLen: 0.7, hair: 0x2a1d14, ponytail: true, eyes: 0x3a2818,
+    lines: [L('Bourekas, coffee, pretzels! What can I get you?', 'בורקס, קפה, בייגלה! מה לתת לכם?'), L('Eat a snack here — a real meal belongs in the sukkah upstairs.', 'חטיף אפשר גם כאן — סעודה צריך לאכול בסוכה למעלה.')] }, low, 0.4, Y, BELOW.z0 + 0.25, 0, {});
+  person('engineer', { name: L('Vova, engineer', 'וובה, המכונאי'), height: 1.8, skin: 0xf0c8a8, shirt: 0x2f4f7a, top: 0x2f4f7a, pants: 0x2f4f7a, hair: 0xc8a060, sleeve: 'rolled', eyes: 0x4a6a9a,
+    lines: [L('Two diesels, 800 horsepower each. Don’t touch anything!', 'שני דיזלים, 800 כוח סוס כל אחד. אל תיגעו בכלום!'), L('On Yom Tov the engines are run by the non-Jewish crew. Ask your rav about sailing on the chag.', 'ביום טוב המנועים מופעלים בידי צוות שאינו יהודי. על הפלגה בחג — שאלו רב.')] }, low, 0.0, Y, BELOW.z1 - 0.75, 0, { pose: 'wrench' });
+  // a guest eating in the sukkah (placed on each rebuild, if there's a table)
+  SUK.guest = person('guest', { name: L('Chaim', 'חיים'), height: 1.76, skin: 0xd6a07a, shirt: 0xf6f6f2, pants: 0x1f232b, hair: 0x2b1e14, beard: 0x2b1e14, kippah: true, tzitzit: true, eyes: 0x3a2818,
+    lines: [L('Leishev basukkah — even on the sea! Want some challah?', 'לישב בסוכה — אפילו בים! רוצים חלה?')] }, B, 0, -50, 0, 0, { state: 'sit', pose: 'tea' });
+}
+// seat the guest at the sukkah table (called after each sukkah rebuild)
+function seatGuest() {
+  const g = SUK.guest; if (!g) return;
+  const W = CFG.w / 100, D = CFG.d / 100, H = CFG.h / 100;
+  if (W >= 1.15 && D >= 1.6 && H >= 1.3) {
+    const td = Math.min(0.6, D - 0.9);
+    SUK.root.add(g.root); g.root.position.set(0, 0, 0.05 + td / 2 + 0.3); g.heading = g.targetHeading = Math.PI; g.root.visible = true;
+  } else g.root.visible = false;
+}
+
+const _hd = new THREE.Vector3(), _cd = new THREE.Vector3();
+let talkT = 0, talkWho = null, talkLine = 0;
+function updateCrew(dt, t) {
+  for (const P of CREW) {
+    if (P.onlyIf) P.root.visible = P.onlyIf();
+    if (!P.root.visible || P.far) continue;
+    // simple routines: patrol with stops, or run laps
+    if (P.route && !P.path.length) {
+      if (P.wait > 0) { P.wait -= dt; }
+      else { P.leg = (P.leg + 1) % P.route.length; const [x, z, pose, w] = P.route[P.leg]; P.pose = null; walkPath(P, [[x, z]], () => { P.pose = pose; P.wait = w; }); }
+    }
+    if (P.loop && !P.path.length) { P.leg = (P.leg + 1) % P.loop.length; walkPath(P, [P.loop[P.leg]]); }
+    P.pos = P.root.position;
+    animatePerson(P, dt, t);
+  }
+  for (const e of BELOW.engines) e.position.x += (Math.random() - 0.5) * (CFG.boat === 'sailing' ? 0.003 : 0.0008) - (e.position.x - Math.sign(e.position.x) * 1.75) * 0.3;
+  // speech bubble for whoever is close and in view
+  camera.getWorldDirection(_cd);
+  let best = null, bestD = 2.6;
+  for (const P of CREW) {
+    if (!P.root.visible || !P.lines.length) continue;
+    P.joints.head.getWorldPosition(_hd);
+    const d = _hd.distanceTo(camera.position);
+    if (d < bestD && _hd.clone().sub(camera.position).normalize().dot(_cd) > 0.55) { best = P; bestD = d; }
+  }
+  const el = $('talk');
+  if (!best) { el.hidden = true; talkWho = null; return; }
+  if (best !== talkWho) { talkWho = best; talkT = 0; talkLine = 0; }
+  talkT += dt; if (talkT > 5.5) { talkT = 0; talkLine = (talkLine + 1) % best.lines.length; }
+  best.gesture = Math.max(best.gesture, 0.3);
+  best.joints.head.getWorldPosition(_hd); _hd.y += 0.32; _hd.project(camera);
+  el.hidden = false;
+  el.innerHTML = `<b>${tr(best.name)}</b>${tr(best.lines[talkLine])}`;
+  const x = (_hd.x * 0.5 + 0.5) * innerWidth, y = (-_hd.y * 0.5 + 0.5) * innerHeight;
+  el.style.left = clamp(x, 120, innerWidth - 120) + 'px'; el.style.top = clamp(y, 70, innerHeight - 160) + 'px';
+}
+
 // ==== 08_sukkah.js
 // ---------------------------------------------------------------- parametric sukkah (all sizes in cm in CFG, metres in 3D)
 const CFG = {
@@ -1289,6 +1944,7 @@ function placeVehicle() {
 const _inv = new THREE.Matrix4(), _mm = new THREE.Matrix4();
 function buildSukkah() {
   placeVehicle();
+  if (SUK.guest && SUK.guest.root.parent === SUK.root) BOAT.root.add(SUK.guest.root);
   if (SUK.root) { SUK.root.parent.remove(SUK.root); SUK.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.userData && o.material.userData.amp) o.material.dispose(); }); }
   const R = new THREE.Group(); SUK.root = R; SUK.panels = []; SUK.lights = []; SUK.rects = []; SUK.triMeshes = [];
   rand = mulberry32(77);
@@ -1365,6 +2021,8 @@ function buildSukkah() {
   for (const p of SUK.panels) { p.castShadow = true; }
   measureShade(R, W, D);
   updateWallMotion(0, true);
+  seatGuest();
+  optimizeSukkah();
   rebuildWalkColliders();
 }
 
@@ -1659,6 +2317,7 @@ function evaluateHalacha() {
     night ? ['The first-night meal must be eaten after tzeit hakochavim — now is the time.', 'סעודת הלילה הראשון נאכלת אחרי צאת הכוכבים — עכשיו הזמן.'] : ['Kiddush and the first-night meal in the sukkah only after the stars come out.', 'קידוש וסעודת הלילה הראשון בסוכה רק אחרי צאת הכוכבים.'],
     ['S.A. 639:3', 'שו״ע תרלט:ג']);
   add('you', 'info', ['The bracha', 'הברכה'], ['When you eat more than a kebeitza of bread (or cake) in the sukkah, say “leishev basukkah”. On the first night add shehecheyanu at kiddush.', 'כשאוכלים יותר מכביצה פת (או מזונות) בסוכה מברכים ״לישב בסוכה״. בלילה הראשון מוסיפים שהחיינו בקידוש.'], ['S.A. 639:2, 8; 643:1', 'שו״ע תרלט:ב, ח; תרמג:א']);
+  add('you', 'info', ['The lounge and cabins below deck', 'הטרקלין והתאים מתחת לסיפון'], ['Down there you are under the deck — a roof. It is not a sukkah: eat your meal and sleep up in the sukkah; a snack or a drink below is fine.', 'למטה אתם מתחת לסיפון — תחת גג. זו לא סוכה: את הסעודה והשינה עושים בסוכה למעלה; חטיף או שתייה מותר גם למטה.'], ['S.A. 626:1; 639:2', 'שו״ע תרכו:א; תרלט:ב']);
   add('you', 'info', ['Sleeping on board', 'שינה בספינה'], ['Sleeping is part of dwelling in the sukkah too — but wind, cold and seasickness exempt, like for eating.', 'גם שינה היא חלק מהמצווה לדור בסוכה — אבל רוח, קור ומחלת ים פוטרים, כמו באכילה.'], ['S.A. 639:2; 640:4', 'שו״ע תרלט:ב; תרמ:ד']);
 
   return R;
@@ -1875,6 +2534,9 @@ function rebuildWalkColliders() {
   box(-3.7, -3.5, 7.8, 8.0, 0, 2.72); box(3.5, 3.7, 7.8, 8.0, 0, 2.72);
   // stairs up the starboard side (world z 3.9 .. 7.6)
   for (let i = 0; i < 14; i++) box(3.85, 4.4, 3.9 + i * 0.264, 7.62, 0, (i + 1) * 0.2, 'stairs');
+  belowDeckColliders(box);
+  // people who stand still
+  for (const P of CREW) { if (P.route || P.loop || P.id === 'guest') continue; const below = P.root.parent === BELOW.root; const y0 = below ? BELOW.fy : P.root.position.y - BOAT.deckY; const x = P.root.position.x, z = P.root.position.z; box(x - 0.22, x + 0.22, z - 0.22, z + 0.22, y0, y0 + 1.7); }
   // bollards, the other car
   for (const [x, z] of [[-3.8, -11], [3.8, -11], [-4, 15.5], [4, 15.5]]) box(x - 0.16, x + 0.16, z - 0.16, z + 0.16, 0, 0.45);
   box(-0.9, 0.9, -10.5, -5.95, 0, 1.5);
@@ -1913,14 +2575,15 @@ function blocked(x, z, feet) {
     if (x + RADIUS > b.x0 && x - RADIUS < b.x1 && z + RADIUS > b.z0 && z - RADIUS < b.z1) return true;
   }
   // stay aboard: the hull railings on the main deck, the bow ramp, the stern
-  if (feet < 2) {
+  if (feet < -1) { if (Math.abs(x) > BELOW.x - 0.3 || z < BELOW.z0 + 0.3 || z > BELOW.z1 - 0.3) return true; }
+  else if (feet < 2) {
     if (z < -11.6 || z > 16.7) return true;
     if (Math.abs(x) > HULL_W(z) - 0.42) return true;
   }
   return false;
 }
 function groundUnder(x, z, feet) {
-  let g = 0;
+  let g = inStairwell(x, z) || feet < -1 ? BELOW.fy : 0;
   for (const b of WALK.boxes) {
     if (b.y1 > feet + STEP) continue;
     if (x + RADIUS * 0.5 > b.x0 && x - RADIUS * 0.5 < b.x1 && z + RADIUS * 0.5 > b.z0 && z - RADIUS * 0.5 < b.z1) g = Math.max(g, b.y1);
@@ -1949,7 +2612,8 @@ function updateWalk(dt) {
   WALK.bob += dt * (l > 0 && WALK.onGround ? sp * 2.4 : 0);
   // where am I?
   const S = WALK.sukkah; let where;
-  if (S && p.x > S.x0 && p.x < S.x1 && p.z > S.z0 && p.z < S.z1 && Math.abs(p.y - S.fy) < 0.3) where = tt('In the sukkah', 'בתוך הסוכה');
+  if (p.y < -1) where = whereBelow(p);
+  else if (S && p.x > S.x0 && p.x < S.x1 && p.z > S.z0 && p.z < S.z1 && Math.abs(p.y - S.fy) < 0.3) where = tt('In the sukkah', 'בתוך הסוכה');
   else if (p.z > 11.65 && p.z < 16.95 && Math.abs(p.x) < 3.65 && p.y < 1.5) where = tt('In the wheelhouse cabin', 'בתא ההגה');
   else if (p.y > 2.6) where = tt('On the upper deck', 'על הסיפון העליון');
   else if (p.y > 0.3 && CFG.vehicle === 'pickup' && p.z > SUK.vehicle.position.z + 0.6) where = tt('On the truck bed', 'בארגז הטנדר');
@@ -1967,6 +2631,7 @@ const LOOK = { yaw: 0, pitch: 0, pos: new THREE.Vector3(0, 0, 4), drag: false, l
 async function buildTextures() {
   TEX.wood = genWood(true);
   TEX.weave = genWeave();
+  TEX.kippah = genKippah();
   await loadStep(0.2, tt('Weaving the canvas', 'אורגים את הבד'));
   try { await document.fonts.load('900 60px "Frank Ruhl Libre"'); await document.fonts.load('700 30px "Assistant"'); } catch (e) {}
   TEX.panels = [genPanelTex(0), genPanelTex(1), genPanelTex(2), genPanelTex(3)];
@@ -2054,7 +2719,9 @@ function updateSound(t) {
   SND.rain.g.gain.value = CFG.rain / 100 * 0.25;
   const flap = CFG.tied || CFG.wallType === 'wood' ? 0 : CFG.wind / 70;
   SND.flap.g.gain.value = flap * 0.3 * Math.max(0, Math.sin(t * (6 + CFG.wind * 0.1)));
-  SND.engine.gain.value = CFG.boat === 'sailing' ? 0.05 : 0;
+  const below = camMode === 'deck' && WALK.pos.y < -1, nearEng = below && WALK.pos.z > 9.5;
+  SND.engine.gain.value = (CFG.boat === 'sailing' ? 0.05 : 0.015) * (nearEng ? 4 : below ? 2 : 1);
+  SND.waves.g.gain.value *= below ? 0.45 : 1;
 }
 
 // ---- cameras
@@ -2154,8 +2821,11 @@ async function boot() {
   await loadStep(0.6, tt('Launching the ferry', 'משיקים את המעבורת'));
   sukkahMaterials();
   buildBoat();
+  buildBelowDeck();
   await loadStep(0.75, tt('Parking the pickup', 'מחנים את הטנדר'));
   buildSukkah();
+  buildCrew(); seatGuest(); rebuildWalkColliders();
+  optimizeScene();
   buildRain(); buildGulls();
   buildPost();
   controls = new OrbitControls(camera, canvas);
@@ -2180,6 +2850,11 @@ function frame(dt) {
   if (CFG.boat === 'sailing') SEA.flow.y -= dt * 6;
   updateSky(dt);
   updateBoat(dt, t);
+  BOAT.root.updateMatrixWorld(); SEA_U.uBoatInv.value.copy(BOAT.root.matrixWorld).invert();
+  // the lower deck is only drawn when you could see it (walking, and down or at the hatch)
+  BELOW.root.visible = camMode === 'deck' && (WALK.pos.y < -0.2 || (WALK.pos.x < -2 && WALK.pos.z > -7 && WALK.pos.z < -2));
+  updateCrew(dt, t);
+  updatePeopleLOD(t);
   // an unstrapped frame shudders and leans as the ship rolls
   if (SUK.root) {
     const loose = CFG.strapped ? 0 : 1;
@@ -2201,12 +2876,101 @@ function frame(dt) {
 function loop() { requestAnimationFrame(loop); frame(Math.min(0.05, clock.getDelta())); composer.render(); }
 
 // debug handle for testing from the console
-window.SEA_SIM = { THREE, scene, camera, renderer, CFG, SUK, SKY, BOAT, WALK, KEYS, LOOK, toggleLang, updateWalk, applyPreset, evaluateHalacha, setCam, frame, get composer() { return composer; },
+window.SEA_SIM = { THREE, scene, camera, renderer, CFG, SUK, SKY, BOAT, CREW, BELOW, WALK, KEYS, LOOK, toggleLang, updateWalk, applyPreset, evaluateHalacha, setCam, frame, get composer() { return composer; },
   tick(n = 30) { for (let i = 0; i < n; i++) frame(1 / 30); },
   shot(n = 'shot') { composer.render(); return fetch('/__shot?n=' + n, { method: 'POST', body: renderer.domElement.toDataURL('image/jpeg', 0.85) }).then((r) => r.text()); },
   ready() { return new Promise((r) => { const i = setInterval(() => { if ($('loading').hidden) { clearInterval(i); r(); } }, 200); }); } };
 
 boot().catch((e) => { console.error(e); $('lstep').textContent = 'Something went wrong: ' + e.message; });
+
+// ==== 12_perf.js
+// ---------------------------------------------------------------- performance: merge static parts, and freeze far-away people into one mesh
+// merge the static meshes under `root` by material, baked into root's space
+function mergeUnder(root, skip) {
+  const dyn = new Set();
+  for (const r of skip) if (r) r.traverse((c) => dyn.add(c));
+  root.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
+  const groups = new Map();
+  const visibleTo = (o) => { for (let p = o; p && p !== root; p = p.parent) if (!p.visible) return false; return true; };
+  root.traverse((o) => {
+    if (!o.isMesh || o.isInstancedMesh || dyn.has(o) || Array.isArray(o.material) || !visibleTo(o)) return;
+    const m = o.material;
+    if (o.customDepthMaterial || m.isShaderMaterial || m.transparent || m.userData.amp || o.frustumCulled === false) return;
+    const key = m.uuid + '|' + o.castShadow + '|' + o.receiveShadow;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(o);
+  });
+  let removed = 0;
+  for (const list of groups.values()) {
+    if (list.length < 2) continue;
+    const mat = list[0].material, geos = [];
+    for (const o of list) {
+      const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+      for (const n of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(n)) g.deleteAttribute(n);
+      if (!mat.vertexColors && g.attributes.color) g.deleteAttribute('color');
+      if (!g.attributes.normal) g.computeVertexNormals();
+      if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+      g.morphAttributes = {};
+      g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld));
+      geos.push(fixNormals(g));
+    }
+    let merged; try { merged = mergeGeometries(geos); } catch (e) { merged = null; }
+    if (!merged) continue;
+    const mm = new THREE.Mesh(merged, mat); mm.castShadow = list[0].castShadow; mm.receiveShadow = list[0].receiveShadow;
+    root.add(mm);
+    for (const o of list) { o.parent.remove(o); removed++; }
+  }
+  return removed;
+}
+
+// a person far from the camera becomes one vertex-coloured mesh in their current pose
+const FROZEN_MAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 });
+const _fc = new THREE.Color();
+function freezePerson(P) {
+  P.root.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(P.root.matrixWorld).invert();
+  const geos = [];
+  P.joints.hips.traverse((o) => {
+    if (!o.isMesh || !o.visible) return;
+    const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone());
+    for (const n of Object.keys(g.attributes)) if (!['position', 'normal'].includes(n)) g.deleteAttribute(n);
+    if (!g.attributes.normal) g.computeVertexNormals();
+    g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld));
+    const m = o.material; _fc.copy(m.color || _fc.set(0xffffff));
+    if (m.map && _fc.getHex() === 0xffffff) _fc.set(0x2a3550); // textured bits (a knitted kippah) → a plain dark tone
+    const n = g.attributes.position.count, col = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { col[i * 3] = _fc.r; col[i * 3 + 1] = _fc.g; col[i * 3 + 2] = _fc.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    geos.push(fixNormals(g));
+  });
+  const merged = mergeGeometries(geos);
+  const f = new THREE.Mesh(merged, FROZEN_MAT); f.castShadow = !MOBILE; f.receiveShadow = true;
+  P.root.add(f); P.frozen = f; f.visible = false;
+}
+// switch each (non-walking) person between the animated rig (close) and the frozen copy (far)
+const _pw = new THREE.Vector3();
+function updatePeopleLOD(t) {
+  for (const P of CREW) {
+    if (P.route || P.loop) continue;
+    if (!P.frozen) { if (t > 2.5) freezePerson(P); continue; }
+    P.root.getWorldPosition(_pw);
+    const far = _pw.distanceTo(camera.position) > 7.5;
+    P.far = far; P.frozen.visible = far; P.joints.hips.visible = !far;
+  }
+}
+// merge the ship, the lower deck and the truck once everything is built
+function optimizeScene() {
+  const skip = [...CREW.map((p) => p.root), SUK.vehicle, BELOW.root, BOAT.flag, BOAT.radar, BOAT.awning, ...BELOW.engines];
+  const a = mergeUnder(BOAT.root, skip);
+  const b = mergeUnder(BELOW.root, [...BELOW.engines, ...CREW.map((p) => p.root)]);
+  console.log('merged static meshes', a, b);
+}
+// the truck (not its sukkah) and the sukkah's static parts, after every rebuild
+function optimizeSukkah() {
+  if (!SUK.vehicle.userData.merged) { mergeUnder(SUK.vehicle, [SUK.root]); SUK.vehicle.userData.merged = true; }
+  mergeUnder(SUK.root, [...SUK.panels, ...(SUK.pendants || []).map((p) => p.piv), ...SUK.lights, SUK.guest && SUK.guest.root]);
+}
 
 </script>
 </body>

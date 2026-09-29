@@ -21,6 +21,9 @@ function rebuildWalkColliders() {
   box(-3.7, -3.5, 7.8, 8.0, 0, 2.72); box(3.5, 3.7, 7.8, 8.0, 0, 2.72);
   // stairs up the starboard side (world z 3.9 .. 7.6)
   for (let i = 0; i < 14; i++) box(3.85, 4.4, 3.9 + i * 0.264, 7.62, 0, (i + 1) * 0.2, 'stairs');
+  belowDeckColliders(box);
+  // people who stand still
+  for (const P of CREW) { if (P.route || P.loop || P.id === 'guest') continue; const below = P.root.parent === BELOW.root; const y0 = below ? BELOW.fy : P.root.position.y - BOAT.deckY; const x = P.root.position.x, z = P.root.position.z; box(x - 0.22, x + 0.22, z - 0.22, z + 0.22, y0, y0 + 1.7); }
   // bollards, the other car
   for (const [x, z] of [[-3.8, -11], [3.8, -11], [-4, 15.5], [4, 15.5]]) box(x - 0.16, x + 0.16, z - 0.16, z + 0.16, 0, 0.45);
   box(-0.9, 0.9, -10.5, -5.95, 0, 1.5);
@@ -59,14 +62,15 @@ function blocked(x, z, feet) {
     if (x + RADIUS > b.x0 && x - RADIUS < b.x1 && z + RADIUS > b.z0 && z - RADIUS < b.z1) return true;
   }
   // stay aboard: the hull railings on the main deck, the bow ramp, the stern
-  if (feet < 2) {
+  if (feet < -1) { if (Math.abs(x) > BELOW.x - 0.3 || z < BELOW.z0 + 0.3 || z > BELOW.z1 - 0.3) return true; }
+  else if (feet < 2) {
     if (z < -11.6 || z > 16.7) return true;
     if (Math.abs(x) > HULL_W(z) - 0.42) return true;
   }
   return false;
 }
 function groundUnder(x, z, feet) {
-  let g = 0;
+  let g = inStairwell(x, z) || feet < -1 ? BELOW.fy : 0;
   for (const b of WALK.boxes) {
     if (b.y1 > feet + STEP) continue;
     if (x + RADIUS * 0.5 > b.x0 && x - RADIUS * 0.5 < b.x1 && z + RADIUS * 0.5 > b.z0 && z - RADIUS * 0.5 < b.z1) g = Math.max(g, b.y1);
@@ -95,7 +99,8 @@ function updateWalk(dt) {
   WALK.bob += dt * (l > 0 && WALK.onGround ? sp * 2.4 : 0);
   // where am I?
   const S = WALK.sukkah; let where;
-  if (S && p.x > S.x0 && p.x < S.x1 && p.z > S.z0 && p.z < S.z1 && Math.abs(p.y - S.fy) < 0.3) where = tt('In the sukkah', 'בתוך הסוכה');
+  if (p.y < -1) where = whereBelow(p);
+  else if (S && p.x > S.x0 && p.x < S.x1 && p.z > S.z0 && p.z < S.z1 && Math.abs(p.y - S.fy) < 0.3) where = tt('In the sukkah', 'בתוך הסוכה');
   else if (p.z > 11.65 && p.z < 16.95 && Math.abs(p.x) < 3.65 && p.y < 1.5) where = tt('In the wheelhouse cabin', 'בתא ההגה');
   else if (p.y > 2.6) where = tt('On the upper deck', 'על הסיפון העליון');
   else if (p.y > 0.3 && CFG.vehicle === 'pickup' && p.z > SUK.vehicle.position.z + 0.6) where = tt('On the truck bed', 'בארגז הטנדר');

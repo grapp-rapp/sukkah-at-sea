@@ -6,6 +6,7 @@ const LOOK = { yaw: 0, pitch: 0, pos: new THREE.Vector3(0, 0, 4), drag: false, l
 async function buildTextures() {
   TEX.wood = genWood(true);
   TEX.weave = genWeave();
+  TEX.kippah = genKippah();
   await loadStep(0.2, tt('Weaving the canvas', 'אורגים את הבד'));
   try { await document.fonts.load('900 60px "Frank Ruhl Libre"'); await document.fonts.load('700 30px "Assistant"'); } catch (e) {}
   TEX.panels = [genPanelTex(0), genPanelTex(1), genPanelTex(2), genPanelTex(3)];
@@ -93,7 +94,9 @@ function updateSound(t) {
   SND.rain.g.gain.value = CFG.rain / 100 * 0.25;
   const flap = CFG.tied || CFG.wallType === 'wood' ? 0 : CFG.wind / 70;
   SND.flap.g.gain.value = flap * 0.3 * Math.max(0, Math.sin(t * (6 + CFG.wind * 0.1)));
-  SND.engine.gain.value = CFG.boat === 'sailing' ? 0.05 : 0;
+  const below = camMode === 'deck' && WALK.pos.y < -1, nearEng = below && WALK.pos.z > 9.5;
+  SND.engine.gain.value = (CFG.boat === 'sailing' ? 0.05 : 0.015) * (nearEng ? 4 : below ? 2 : 1);
+  SND.waves.g.gain.value *= below ? 0.45 : 1;
 }
 
 // ---- cameras
@@ -193,8 +196,11 @@ async function boot() {
   await loadStep(0.6, tt('Launching the ferry', 'משיקים את המעבורת'));
   sukkahMaterials();
   buildBoat();
+  buildBelowDeck();
   await loadStep(0.75, tt('Parking the pickup', 'מחנים את הטנדר'));
   buildSukkah();
+  buildCrew(); seatGuest(); rebuildWalkColliders();
+  optimizeScene();
   buildRain(); buildGulls();
   buildPost();
   controls = new OrbitControls(camera, canvas);
@@ -219,6 +225,11 @@ function frame(dt) {
   if (CFG.boat === 'sailing') SEA.flow.y -= dt * 6;
   updateSky(dt);
   updateBoat(dt, t);
+  BOAT.root.updateMatrixWorld(); SEA_U.uBoatInv.value.copy(BOAT.root.matrixWorld).invert();
+  // the lower deck is only drawn when you could see it (walking, and down or at the hatch)
+  BELOW.root.visible = camMode === 'deck' && (WALK.pos.y < -0.2 || (WALK.pos.x < -2 && WALK.pos.z > -7 && WALK.pos.z < -2));
+  updateCrew(dt, t);
+  updatePeopleLOD(t);
   // an unstrapped frame shudders and leans as the ship rolls
   if (SUK.root) {
     const loose = CFG.strapped ? 0 : 1;
@@ -240,7 +251,7 @@ function frame(dt) {
 function loop() { requestAnimationFrame(loop); frame(Math.min(0.05, clock.getDelta())); composer.render(); }
 
 // debug handle for testing from the console
-window.SEA_SIM = { THREE, scene, camera, renderer, CFG, SUK, SKY, BOAT, WALK, KEYS, LOOK, toggleLang, updateWalk, applyPreset, evaluateHalacha, setCam, frame, get composer() { return composer; },
+window.SEA_SIM = { THREE, scene, camera, renderer, CFG, SUK, SKY, BOAT, CREW, BELOW, WALK, KEYS, LOOK, toggleLang, updateWalk, applyPreset, evaluateHalacha, setCam, frame, get composer() { return composer; },
   tick(n = 30) { for (let i = 0; i < n; i++) frame(1 / 30); },
   shot(n = 'shot') { composer.render(); return fetch('/__shot?n=' + n, { method: 'POST', body: renderer.domElement.toDataURL('image/jpeg', 0.85) }).then((r) => r.text()); },
   ready() { return new Promise((r) => { const i = setInterval(() => { if ($('loading').hidden) { clearInterval(i); r(); } }, 200); }); } };

@@ -13,7 +13,9 @@ Change anything, and ~30 halachot of sukkah are checked live, each with its sour
 - **The sea:** anchored or sailing, wind (real Gerstner waves), rain, seasickness, day/night.
 - **The moment:** Yom Tov or Chol HaMoed, and the shiur: Rav Chaim Na’eh (8 cm) or the Chazon Ish (9.6 cm).
 - **Check:** a verdict (Kosher / Kosher, but… / Pasul), “Can you eat here right now?”, and every rule with its source. Shade and air gaps are measured from the actual 3D schach.
-- **Walk the ship:** W A S D to walk, Space to jump, Shift to run. Climb the stool onto the truck bed and into the sukkah, go into the wheelhouse cabin, and take the stairs up to the upper deck.
+- **Walk the ship:** W A S D to walk, Space to jump, Shift to run. Climb the stool onto the truck bed and into the sukkah, go into the wheelhouse cabin, take the stairs up to the upper deck, or down the hatch below deck.
+- **People aboard:** Captain Moshe at the wheel, Mendy with a lulav and etrog by the sukkah-mobile, a deckhand, tourists, a kid, a seasick “mitztaer”, a guest eating in the sukkah, and more below deck. Walk up to anyone and they talk (English or Hebrew).
+- **Below deck:** go down the hatch to the passenger lounge (cafeteria, shesh-besh players, a man davening), the bunk cabins, and the engine room with two 800 hp diesels.
 - **English / עברית** toggle.
 - **Works on phones:** a Build / Halacha / View tab bar, bottom sheets (side sheets in landscape), a live Kosher/Pasul chip, and a joystick + jump button for walking the deck. Drag with one finger to look around, pinch to zoom.
 

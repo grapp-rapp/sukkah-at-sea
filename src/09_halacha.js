@@ -127,6 +127,7 @@ function evaluateHalacha() {
     night ? ['The first-night meal must be eaten after tzeit hakochavim — now is the time.', 'סעודת הלילה הראשון נאכלת אחרי צאת הכוכבים — עכשיו הזמן.'] : ['Kiddush and the first-night meal in the sukkah only after the stars come out.', 'קידוש וסעודת הלילה הראשון בסוכה רק אחרי צאת הכוכבים.'],
     ['S.A. 639:3', 'שו״ע תרלט:ג']);
   add('you', 'info', ['The bracha', 'הברכה'], ['When you eat more than a kebeitza of bread (or cake) in the sukkah, say “leishev basukkah”. On the first night add shehecheyanu at kiddush.', 'כשאוכלים יותר מכביצה פת (או מזונות) בסוכה מברכים ״לישב בסוכה״. בלילה הראשון מוסיפים שהחיינו בקידוש.'], ['S.A. 639:2, 8; 643:1', 'שו״ע תרלט:ב, ח; תרמג:א']);
+  add('you', 'info', ['The lounge and cabins below deck', 'הטרקלין והתאים מתחת לסיפון'], ['Down there you are under the deck — a roof. It is not a sukkah: eat your meal and sleep up in the sukkah; a snack or a drink below is fine.', 'למטה אתם מתחת לסיפון — תחת גג. זו לא סוכה: את הסעודה והשינה עושים בסוכה למעלה; חטיף או שתייה מותר גם למטה.'], ['S.A. 626:1; 639:2', 'שו״ע תרכו:א; תרלט:ב']);
   add('you', 'info', ['Sleeping on board', 'שינה בספינה'], ['Sleeping is part of dwelling in the sukkah too — but wind, cold and seasickness exempt, like for eating.', 'גם שינה היא חלק מהמצווה לדור בסוכה — אבל רוח, קור ומחלת ים פוטרים, כמו באכילה.'], ['S.A. 639:2; 640:4', 'שו״ע תרלט:ב; תרמ:ד']);
 
   return R;

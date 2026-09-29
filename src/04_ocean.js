@@ -6,6 +6,7 @@ const WAVE_BASE = [
 ];
 const SEA_U = {
   uWaves: { value: WAVE_BASE.map(() => new THREE.Vector4()) },
+  uBoatInv: { value: new THREE.Matrix4() },
   uFlow: { value: SEA.flow }, uFoam: { value: 0.3 }, uSail: { value: 0 }, uTime: U.time,
 };
 function setSeaState(windKmh, sailing) {
@@ -69,11 +70,15 @@ function buildOcean() {
       .replace('#include <begin_vertex>', `vec3 transformed = position + disp;`)
       .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
         vSeaW = (modelMatrix * vec4(transformed, 1.0)).xyz;`);
-    sh.fragmentShader = `uniform float uFoam, uSail, uTime; uniform vec2 uFlow; varying vec3 vSeaW; varying float vCrest;
+    sh.fragmentShader = `uniform float uFoam, uSail, uTime; uniform vec2 uFlow; uniform mat4 uBoatInv; varying vec3 vSeaW; varying float vCrest;
+      float hullW(float z){ if (z < -17.0 || z > 17.0) return 0.0; if (z < -9.0) return 4.6 * pow(sin((z + 17.0) / 8.0 * 1.5708), 0.8); return 4.6; }
       float sh12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
       float svn(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f*f*(3.0-2.0*f); return mix(mix(sh12(i), sh12(i+vec2(1,0)), u.x), mix(sh12(i+vec2(0,1)), sh12(i+vec2(1,1)), u.x), u.y); }
       float foamN(vec2 p){ return svn(p) * 0.6 + svn(p * 2.3 + 7.1) * 0.4; }
 ` + sh.fragmentShader
+      .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+        vec3 inBoat = (uBoatInv * vec4(vSeaW, 1.0)).xyz;
+        if (abs(inBoat.x) < hullW(inBoat.z) - 0.1 && inBoat.y < 2.0) discard;`)
       .replace('#include <normal_fragment_maps>', `
         #ifdef USE_NORMALMAP
           vec2 ruv = (vSeaW.xz + uFlow) * 0.045 + vec2(uTime * 0.012, uTime * 0.007);

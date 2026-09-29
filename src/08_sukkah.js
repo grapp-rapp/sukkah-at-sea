@@ -72,6 +72,7 @@ function placeVehicle() {
 const _inv = new THREE.Matrix4(), _mm = new THREE.Matrix4();
 function buildSukkah() {
   placeVehicle();
+  if (SUK.guest && SUK.guest.root.parent === SUK.root) BOAT.root.add(SUK.guest.root);
   if (SUK.root) { SUK.root.parent.remove(SUK.root); SUK.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.userData && o.material.userData.amp) o.material.dispose(); }); }
   const R = new THREE.Group(); SUK.root = R; SUK.panels = []; SUK.lights = []; SUK.rects = []; SUK.triMeshes = [];
   rand = mulberry32(77);
@@ -148,6 +149,8 @@ function buildSukkah() {
   for (const p of SUK.panels) { p.castShadow = true; }
   measureShade(R, W, D);
   updateWallMotion(0, true);
+  seatGuest();
+  optimizeSukkah();
   rebuildWalkColliders();
 }
 

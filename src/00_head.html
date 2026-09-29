@@ -87,6 +87,9 @@ select option{background:#12202c}
 [dir=rtl] .rng output{text-align:left}
 [dir=rtl] .sec h2,[dir=rtl] .rule .grp{letter-spacing:0}
 [dir=rtl] #v-he{direction:ltr}
+#talk{position:fixed;transform:translate(-50%,-100%);max-width:min(280px,80vw);padding:9px 12px 10px;background:rgba(250,246,236,.95);color:#1b1610;border-radius:12px;font-size:13.5px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:none;z-index:3}
+#talk b{display:block;font-family:var(--title);font-size:13px;color:#8a5a1a;margin-bottom:2px}
+#talk::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-top-color:rgba(250,246,236,.95);border-bottom:0}
 #hud-walk{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 3px #000;pointer-events:none}
 #where{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);font-size:13px;padding:5px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
 /* ---------- phones & small tablets ---------- */
@@ -173,6 +176,7 @@ select option{background:#12202c}
 </aside>
 
 <div id="story"><span class="x" id="story-x">✕</span><b>Rabbi Akiva's sukkah</b><br>Rabban Gamliel and Rabbi Akiva were sailing on a ship. Rabbi Akiva built a sukkah on the deck, and the next day the wind blew it away. Rabban Gamliel asked him, <i>“Akiva, where is your sukkah?”</i> — Sukkah 23a. The halacha follows Rabbi Akiva: a sukkah on a ship or a wagon is kosher, as long as it could stand in an ordinary wind on land.</div>
+<div id="talk" hidden></div>
 <div id="hud-walk" hidden></div><div id="where" hidden></div>
 <div id="hint">Drag to look around · scroll to zoom · click a rule for its source</div>
 <div id="cam"><button data-c="orbit" class="on" data-i18n="cOrbit">Orbit</button><button data-c="inside" data-i18n="cInside">Sit inside</button><button data-c="deck" data-i18n="cDeck">On deck</button><button data-c="sea" data-i18n="cSea">From the sea</button></div>

@@ -67,6 +67,7 @@ function buildBoat() {
   const deckMat = new THREE.MeshStandardMaterial({ ...dset, metalness: 0.25, color: 0x9ea79c });
   const shape = new THREE.Shape(); const hw0 = (z) => HULL_W(z) - 0.05;
   shape.moveTo(0, 16.6); for (let z = -16; z <= 17; z += 1) shape.lineTo(hw0(z), -z); for (let z = 17; z >= -16; z -= 1) shape.lineTo(-hw0(z), -z);
+  { const h = new THREE.Path(); const x0 = STAIRWELL.x0 - 0.05, x1 = STAIRWELL.x1 + 0.05, z0 = STAIRWELL.z0, z1 = STAIRWELL.z1 + 0.15; h.moveTo(x0, -z0); h.lineTo(x1, -z0); h.lineTo(x1, -z1); h.lineTo(x0, -z1); h.lineTo(x0, -z0); shape.holes.push(h); }
   const dg = new THREE.ShapeGeometry(shape); dg.rotateX(-Math.PI / 2);
   const uv = dg.attributes.uv, dp = dg.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, dp.getX(i) / 9.2, dp.getZ(i) / 34);
   const deck = new THREE.Mesh(dg, deckMat); deck.position.y = D; deck.receiveShadow = true; BOAT.root.add(deck);
