@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <title>Sukkah at Sea</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;500;600;700&display=swap">
@@ -91,14 +93,63 @@ select option{background:#12202c}
 [dir=rtl] #v-he{direction:ltr}
 #hud-walk{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 3px #000;pointer-events:none}
 #where{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);font-size:13px;padding:5px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
-@media (max-width:960px){
-  .panel{top:auto;bottom:56px;left:8px!important;right:8px!important;width:auto!important;height:46vh}
+/* ---------- phones & small tablets ---------- */
+#mbar,#joy,#jumpbtn{display:none}
+.mtabs .ico{font-size:17px;line-height:1;display:block;margin-bottom:2px}
+@media (max-width:960px), (max-height:540px) and (pointer:coarse){
+  html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+  #mbar{display:flex;position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:8px;right:8px;justify-content:space-between;align-items:center;gap:8px;pointer-events:none;z-index:5}
+  #mbar > *{pointer-events:auto}
+  #vchip{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-family:var(--title);font-weight:700;font-size:16px}
+  #vchip i{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px currentColor}
+  #vchip.warn i{background:var(--warn)}#vchip.fail i{background:var(--fail)}
+  #vchip small{font-family:var(--body);font-weight:500;font-size:12px;color:var(--dim)}
+  #mbar .langbtn{float:none;margin:0;padding:7px 12px;background:var(--panel);backdrop-filter:blur(10px)}
+  #build .langbtn{display:none}
+  .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:6;gap:0;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(10,15,20,.9);border-top:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .mtabs button{all:unset;flex:1;text-align:center;padding:6px 4px;border-radius:10px;font-size:12px;font-weight:600;color:var(--dim);cursor:pointer}
+  .mtabs button.on{color:var(--ink);background:rgba(233,183,95,.18)}
+  .panel{top:auto;bottom:calc(60px + env(safe-area-inset-bottom,0px));left:6px!important;right:6px!important;width:auto!important;height:min(56dvh,560px);border-radius:16px}
   .panel.hide{display:none}
-  .mtabs{display:flex;position:fixed;top:10px;left:50%;transform:translateX(-50%);gap:6px;background:var(--panel);border-radius:999px;padding:4px;border:1px solid var(--line)}
-  .mtabs button{all:unset;padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer}
-  .mtabs button.on{background:rgba(233,183,95,.22)}
-  #story{display:none}
+  .phead{padding:12px 14px 8px}
+  .phead h1{font-size:18px}
+  .presets{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .presets::-webkit-scrollbar{display:none}
+  .presets button{white-space:nowrap;padding:7px 11px;font-size:12.5px}
+  .scroll{padding:2px 14px 18px;-webkit-overflow-scrolling:touch}
+  .row{grid-template-columns:96px 1fr;margin:10px 0}
+  .seg button{padding:9px 4px;font-size:12.5px}
+  select{padding:9px 8px;font-size:14px}
+  input[type=range]{height:28px}
+  .tog{min-height:30px}.tog input{width:20px;height:20px}
+  #verdict{padding:12px 14px}
+  #v-big{font-size:26px}
+  .filters{overflow-x:auto;padding:8px 14px 0;scrollbar-width:none}
+  .filters button{white-space:nowrap;padding:6px 10px}
+  #cam{bottom:calc(68px + env(safe-area-inset-bottom,0px));max-width:calc(100vw - 16px);overflow-x:auto}
+  #cam button{padding:8px 11px;white-space:nowrap}
+  body.sheet-open #cam, body.sheet-open #where, body.sheet-open #joy, body.sheet-open #jumpbtn{display:none!important}
   #hint{display:none}
+  #where{top:calc(56px + env(safe-area-inset-top,0px));bottom:auto;font-size:12px}
+  #story{top:calc(56px + env(safe-area-inset-top,0px));left:8px;right:8px;transform:none;max-width:none;min-width:0;font-size:12.5px;max-height:34dvh;overflow:auto}
+  body.sheet-open #story{display:none}
+  /* touch controls for walking the deck */
+  body.walk #joy{display:block;position:fixed;left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(124px + env(safe-area-inset-bottom,0px));width:124px;height:124px;border-radius:50%;background:rgba(10,15,20,.35);border:2px solid rgba(255,255,255,.25);touch-action:none;z-index:4}
+  #joy b{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(245,239,227,.85);box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  body.walk #jumpbtn{display:flex;position:fixed;right:calc(22px + env(safe-area-inset-right,0px));bottom:calc(140px + env(safe-area-inset-bottom,0px));width:80px;height:80px;border-radius:50%;align-items:center;justify-content:center;background:rgba(233,183,95,.85);color:#1a1108;font-weight:800;font-size:13px;border:none;touch-action:none;z-index:4;user-select:none;-webkit-user-select:none}
+  body.walk #jumpbtn:active{transform:scale(.93)}
+}
+/* landscape phones: the sheet goes to the side instead */
+@media (max-height:540px) and (orientation:landscape) and (max-width:960px), (max-height:540px) and (orientation:landscape) and (pointer:coarse){
+  .mtabs .ico{display:none}
+  .mtabs{padding-top:4px;padding-bottom:calc(4px + env(safe-area-inset-bottom,0px))}
+  #cam{bottom:calc(46px + env(safe-area-inset-bottom,0px))}
+  .panel{top:calc(52px + env(safe-area-inset-top,0px));bottom:calc(44px + env(safe-area-inset-bottom,0px));height:auto;width:min(46vw,380px)!important;right:auto!important}
+  [dir=rtl] .panel{left:auto!important;right:6px!important}
+  #check{overflow-y:auto;display:block}
+  #check .scroll{overflow:visible}
+  body.walk #joy{bottom:calc(70px + env(safe-area-inset-bottom,0px))}
+  body.walk #jumpbtn{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
 }
 </style>
 <script type="importmap">
@@ -113,7 +164,9 @@ select option{background:#12202c}
 
 <canvas id="game"></canvas>
 
-<div class="mtabs"><button data-p="build" class="on" data-i18n="tBuild">Build</button><button data-p="check" data-i18n="tCheck">Halacha</button><button data-p="none" data-i18n="tView">View</button></div>
+<div id="mbar"><button id="vchip"><i></i><span id="vchip-t">…</span></button><button id="lang2" class="langbtn" data-i18n="lang">עברית</button></div>
+<div class="mtabs"><button data-p="build"><span class="ico">🛠️</span><span data-i18n="tBuild">Build</span></button><button data-p="check"><span class="ico">📖</span><span data-i18n="tCheck">Halacha</span></button><button data-p="none" class="on"><span class="ico">🌊</span><span data-i18n="tView">View</span></button></div>
+<div id="joy"><b></b></div><button id="jumpbtn" data-i18n="jump">JUMP</button>
 
 <aside id="build" class="panel">
   <div class="phead"><button id="lang" class="langbtn" data-i18n="lang">עברית</button><h1 data-i18n="title">Sukkah <span>on a car</span> on a boat</h1><p data-i18n="sub">Build it, sail it, and see which halachot it keeps.</p>
@@ -189,7 +242,10 @@ const store = {
 // ---------------------------------------------------------------- renderer (tuned for integrated GPUs)
 const canvas = $('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', stencil: false });
-const PR = Math.min(window.devicePixelRatio, 1.5) * 0.9;
+// phones: coarse pointer or a small screen → lighter rendering and the touch layout
+const MOBILE = matchMedia('(pointer: coarse)').matches || Math.min(innerWidth, innerHeight) < 540;
+const mobileLayout = () => matchMedia('(max-width:960px), (max-height:540px) and (pointer:coarse)').matches;
+const PR = Math.min(window.devicePixelRatio, MOBILE ? 1.25 : 1.5) * 0.9;
 renderer.setPixelRatio(PR);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
@@ -202,7 +258,7 @@ scene.fog = new THREE.Fog(0xc9d6de, 200, 2600);
 const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.05, 12000);
 const U = { time: { value: 0 }, wind: { value: 1 }, sunDir: { value: new THREE.Vector3(0.3, 0.8, 0.2) } };
 const tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), tmpV3 = new THREE.Vector3(), tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpS = new THREE.Vector3(), tmpE = new THREE.Euler(), tmpC = new THREE.Color();
-const Q = { shadow: 2048 };
+const Q = { shadow: MOBILE ? 1024 : 2048 };
 function shadowed(obj, cast = true, receive = true) { obj.traverse((o) => { if (o.isMesh) { o.castShadow = cast; o.receiveShadow = receive; } }); return obj; }
 function addMesh(geo, mat, x, y, z, parent, cast = true, receive = true) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = cast; m.receiveShadow = receive; parent.add(m); return m; }
 async function loadStep(f, t) { $('lbar').firstElementChild.style.width = (f * 100) + '%'; $('lstep').textContent = t; await nextFrame(); await nextFrame(); }
@@ -225,6 +281,7 @@ const STR = {
   story: ['<b>Rabbi Akiva’s sukkah</b><br>Rabban Gamliel and Rabbi Akiva were sailing on a ship. Rabbi Akiva built a sukkah on the deck, and the next day the wind blew it away. Rabban Gamliel asked him, <i>“Akiva, where is your sukkah?”</i> — Sukkah 23a. The halacha follows Rabbi Akiva: a sukkah on a ship or a wagon is kosher, as long as it could stand in an ordinary wind on land.',
     '<b>הסוכה של רבי עקיבא</b><br>רבן גמליאל ורבי עקיבא היו באים בספינה. עשה רבי עקיבא סוכה בראש הספינה, ולמחר נשבה הרוח ועקרתה. אמר לו רבן גמליאל: <i>״עקיבא, היכן סוכתך?״</i> — סוכה כג ע״א. הלכה כרבי עקיבא: סוכה בראש העגלה או בראש הספינה כשרה, ובלבד שיכולה לעמוד ברוח מצויה של יבשה.'],
   lang: ['עברית', 'English'],
+  jump: ['JUMP', 'קפיצה'],
 };
 const HINTS = {
   orbit: ['Drag to look around · scroll to zoom · click a rule for its source', 'גררו כדי להסתכל מסביב · גלגלת לזום · לחצו על הלכה כדי לראות את המקור'],
@@ -691,7 +748,7 @@ function buildOcean() {
         roughnessFactor = mix(roughnessFactor, 0.85, foam);`);
   };
   SEA.mat = mat;
-  const geo = new THREE.PlaneGeometry(1200, 1200, 300, 300); geo.rotateX(-Math.PI / 2);
+  const geo = new THREE.PlaneGeometry(1200, 1200, MOBILE ? 170 : 300, MOBILE ? 170 : 300); geo.rotateX(-Math.PI / 2);
   // denser in the middle where the boat is: squash vertices toward the centre
   const p = geo.attributes.position;
   for (let i = 0; i < p.count; i++) { const x = p.getX(i) / 600, z = p.getZ(i) / 600; const r = Math.max(Math.abs(x), Math.abs(z)); const s = r > 0 ? Math.pow(r, 1.7) / r : 0; p.setX(i, x * s * 600); p.setZ(i, z * s * 600); }
@@ -1631,6 +1688,7 @@ function renderHalacha() {
   big.textContent = v === 'ok' ? tt('Kosher', 'כשרה') : v === 'warn' ? tt('Kosher, but…', 'כשרה, אבל…') : tt('Pasul', 'פסולה');
   $('v-he').textContent = HE() ? (v === 'ok' ? 'Kosher' : v === 'warn' ? 'Kosher bedieved' : 'Pasul') : (v === 'ok' ? 'סוכה כשרה' : v === 'warn' ? 'כשרה בדיעבד' : 'סוכה פסולה');
   $('v-he').style.direction = HE() ? 'ltr' : 'rtl';
+  $('vchip').className = v; $('vchip-t').textContent = big.textContent;
   const nf = R.filter((r) => r.st === 'fail').length, nw = R.filter((r) => r.st === 'warn').length, no = R.filter((r) => r.st === 'ok').length;
   $('v-sub').textContent = v === 'ok' ? tt('Every rule for the sukkah itself is met.', 'כל דיני הסוכה עצמה מתקיימים.') : v === 'warn' ? tt('Valid, but not the ideal way — see the ⚠ items.', 'כשרה, אבל לא לכתחילה — ראו את סעיפי ה־⚠.') : tt('At least one rule makes this sukkah invalid — see the ✕ items.', 'לפחות דין אחד פוסל את הסוכה — ראו את סעיפי ה־✕.');
   $('eat').innerHTML = tt('🍞 <b>Can you eat here right now?</b><br>', '🍞 <b>אפשר לאכול כאן עכשיו?</b><br>') + eatVerdict(R, v);
@@ -1760,10 +1818,26 @@ function buildControls() {
   // rule filters
   for (const b of $('filters').children) b.onclick = () => { RULE_FILTER = b.dataset.f; [...$('filters').children].forEach((x) => x.classList.toggle('on', x === b)); renderHalacha(); };
   // mobile tabs
-  for (const b of document.querySelectorAll('.mtabs button')) b.onclick = () => {
-    document.querySelectorAll('.mtabs button').forEach((x) => x.classList.toggle('on', x === b));
-    $('build').classList.toggle('hide', b.dataset.p !== 'build'); $('check').classList.toggle('hide', b.dataset.p !== 'check');
-  };
+  for (const b of document.querySelectorAll('.mtabs button')) b.onclick = () => showSheet(b.dataset.p);
+  $('vchip').onclick = () => showSheet(document.body.dataset.sheet === 'check' ? 'none' : 'check');
+  showSheet(document.body.dataset.sheet || (mobileLayout() ? 'none' : 'build'));
+}
+// phone layout: one bottom sheet at a time (Build / Halacha), or none to just look
+function showSheet(p) {
+  document.body.dataset.sheet = p;
+  document.querySelectorAll('.mtabs button').forEach((x) => x.classList.toggle('on', x.dataset.p === p));
+  $('build').classList.toggle('hide', p !== 'build'); $('check').classList.toggle('hide', p !== 'check');
+  document.body.classList.toggle('sheet-open', mobileLayout() && p !== 'none');
+  fitViewToSheet();
+}
+// keep the sukkah in the part of the screen the sheet doesn't cover
+function fitViewToSheet() {
+  const W = innerWidth, H = innerHeight;
+  const panel = document.body.classList.contains('sheet-open') ? $(document.body.dataset.sheet) : null;
+  if (!panel) { camera.clearViewOffset(); return; }
+  const r = panel.getBoundingClientRect();
+  if (r.width < W * 0.7) camera.setViewOffset(W, H, (r.left < W / 2 ? -1 : 1) * r.width / 2, 0, W, H);
+  else camera.setViewOffset(W, H, 0, (H - r.top) / 2, W, H);
 }
 const PRESET_BASE = { ...PRESETS[0][1], walls: '4', wallType: 'canvas', tied: true, supports: 'wood', order: 'walls', old: false, renewed: false, permission: true };
 function applyPreset(p, keepRest = false) {
@@ -1779,6 +1853,7 @@ function refreshTefachLabels() { for (const k of ['w', 'd', 'h', 'wallH', 'wallG
 
 // ==== 10b_walk.js
 // ---------------------------------------------------------------- walking on the ship: collision boxes in boat space (y measured from the deck)
+const JOY = { x: 0, y: 0, id: null };
 const WALK = { pos: new THREE.Vector3(-2.2, 0, -2.5), vy: 0, onGround: true, boxes: [], bob: 0 };
 const STEP = 0.43, RADIUS = 0.28, EYE = 1.64;
 
@@ -1854,8 +1929,10 @@ function groundUnder(x, z, feet) {
 }
 function updateWalk(dt) {
   const p = WALK.pos;
-  const f = (KEYS.KeyW || KEYS.ArrowUp ? 1 : 0) - (KEYS.KeyS || KEYS.ArrowDown ? 1 : 0), s = (KEYS.KeyD || KEYS.ArrowRight ? 1 : 0) - (KEYS.KeyA || KEYS.ArrowLeft ? 1 : 0);
-  const sp = KEYS.ShiftLeft || KEYS.ShiftRight ? 3.8 : 1.9;
+  // keyboard plus the on-screen joystick (analog)
+  const f = (KEYS.KeyW || KEYS.ArrowUp ? 1 : 0) - (KEYS.KeyS || KEYS.ArrowDown ? 1 : 0) - JOY.y, s = (KEYS.KeyD || KEYS.ArrowRight ? 1 : 0) - (KEYS.KeyA || KEYS.ArrowLeft ? 1 : 0) + JOY.x;
+  const push = Math.min(1, Math.hypot(f, s));
+  const sp = (KEYS.ShiftLeft || KEYS.ShiftRight || Math.hypot(JOY.x, JOY.y) > 0.92 ? 3.8 : 1.9) * push;
   let dx = (-Math.sin(LOOK.yaw) * f + Math.cos(LOOK.yaw) * s), dz = (-Math.cos(LOOK.yaw) * f - Math.sin(LOOK.yaw) * s);
   const l = Math.hypot(dx, dz); if (l > 0) { dx = dx / l * sp * dt; dz = dz / l * sp * dt; }
   // the deck tilts: you slide a touch downhill as the ship rolls
@@ -1877,7 +1954,7 @@ function updateWalk(dt) {
   else if (p.y > 2.6) where = tt('On the upper deck', 'על הסיפון העליון');
   else if (p.y > 0.3 && CFG.vehicle === 'pickup' && p.z > SUK.vehicle.position.z + 0.6) where = tt('On the truck bed', 'בארגז הטנדר');
   else where = tt('On deck', 'על הסיפון');
-  $('where').textContent = where + tt(' · Space to jump', ' · רווח לקפיצה');
+  $('where').textContent = where + (MOBILE ? '' : tt(' · Space to jump', ' · רווח לקפיצה'));
 }
 function walkCameraLocal(out) { return out.set(WALK.pos.x, BOAT.deckY + WALK.pos.y + EYE + Math.abs(Math.sin(WALK.bob)) * 0.03, WALK.pos.z); }
 
@@ -1885,7 +1962,7 @@ function walkCameraLocal(out) { return out.set(WALK.pos.x, BOAT.deckY + WALK.pos
 // ---------------------------------------------------------------- boot, cameras, rain, gulls, sound, loop
 const clock = new THREE.Clock();
 let composer, bloomPass, fxaaPass, controls, camMode = 'orbit';
-const LOOK = { yaw: 0, pitch: 0, pos: new THREE.Vector3(0, 0, 4), drag: false };
+const LOOK = { yaw: 0, pitch: 0, pos: new THREE.Vector3(0, 0, 4), drag: false, lx: 0, ly: 0 };
 
 async function buildTextures() {
   TEX.wood = genWood(true);
@@ -1907,7 +1984,7 @@ function buildPost() {
 }
 
 // ---- rain (streaks around the camera, slanted by the wind)
-const RAIN = { mesh: null, n: 4000, pos: null };
+const RAIN = { mesh: null, n: MOBILE ? 1500 : 4000, pos: null };
 function buildRain() {
   const g = new THREE.BufferGeometry(); const p = new Float32Array(RAIN.n * 6);
   for (let i = 0; i < RAIN.n; i++) { const x = rr(-25, 25), y = rr(0, 22), z = rr(-25, 25); p.set([x, y, z, x, y - 0.4, z], i * 6); }
@@ -1984,7 +2061,8 @@ function updateSound(t) {
 function sukkahWorldCenter(out) { const H = CFG.h / 100; return SUK.root.localToWorld(out.set(0, H * 0.55, 0)); }
 function frameOrbit() {
   sukkahWorldCenter(controls.target);
-  const off = new THREE.Vector3(-5.5, 3.2, -6.5).multiplyScalar(0.8 + Math.max(CFG.w, CFG.d) / 400);
+  // narrow portrait screens need the camera further back to fit the truck
+  const off = new THREE.Vector3(-5.5, 3.2, -6.5).multiplyScalar((0.8 + Math.max(CFG.w, CFG.d) / 400) * Math.max(1, Math.pow(1 / camera.aspect, 0.55)));
   camera.position.copy(controls.target).add(off);
 }
 function setCam(mode) {
@@ -1996,6 +2074,8 @@ function setCam(mode) {
   if (mode === 'deck') { LOOK.yaw = Math.PI * 1.25; LOOK.pitch = 0.05; }
   $('hint').textContent = tr(HINTS[mode]);
   $('hud-walk').hidden = $('where').hidden = mode !== 'deck';
+  document.body.classList.toggle('walk', mode === 'deck');
+  if (mode !== 'deck') { JOY.x = JOY.y = 0; JOY.id = null; $('joy').firstElementChild.style.transform = ''; KEYS.Space = false; }
 }
 const _prevT = new THREE.Vector3();
 function updateCamera(dt) {
@@ -2021,9 +2101,36 @@ function updateCamera(dt) {
 const KEYS = {};
 addEventListener('keydown', (e) => { if ((e.target.tagName === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox') || e.target.tagName === 'SELECT') return; KEYS[e.code] = true; if (camMode === 'deck' && ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { e.preventDefault(); if (e.target.blur) e.target.blur(); } });
 addEventListener('keyup', (e) => { KEYS[e.code] = false; });
-canvas.addEventListener('pointerdown', (e) => { audioInit(); if (camMode === 'inside' || camMode === 'deck') { LOOK.drag = true; canvas.setPointerCapture(e.pointerId); } });
-canvas.addEventListener('pointerup', () => { LOOK.drag = false; });
-canvas.addEventListener('pointermove', (e) => { if (!LOOK.drag) return; LOOK.yaw -= e.movementX * 0.004; LOOK.pitch = clamp(LOOK.pitch - e.movementY * 0.004, -1.2, 1.4); });
+// drag to look (mouse or finger): track deltas ourselves — touch pointers have no movementX on every browser
+canvas.addEventListener('pointerdown', (e) => {
+  audioInit();
+  if ((camMode === 'inside' || camMode === 'deck') && LOOK.drag === false) { LOOK.drag = e.pointerId; LOOK.lx = e.clientX; LOOK.ly = e.clientY; try { canvas.setPointerCapture(e.pointerId); } catch (err) {} }
+});
+const endLook = (e) => { if (LOOK.drag === e.pointerId) LOOK.drag = false; };
+canvas.addEventListener('pointerup', endLook); canvas.addEventListener('pointercancel', endLook);
+canvas.addEventListener('pointermove', (e) => {
+  if (LOOK.drag !== e.pointerId) return;
+  const k = e.pointerType === 'touch' ? 0.0065 : 0.004;
+  LOOK.yaw -= (e.clientX - LOOK.lx) * k; LOOK.pitch = clamp(LOOK.pitch - (e.clientY - LOOK.ly) * k, -1.2, 1.4);
+  LOOK.lx = e.clientX; LOOK.ly = e.clientY;
+});
+// on-screen joystick + jump button for walking the deck on a phone
+{
+  const joy = $('joy'), knob = joy.firstElementChild;
+  const move = (e) => {
+    const r = joy.getBoundingClientRect(), R = r.width / 2;
+    let x = (e.clientX - r.left - R) / R, y = (e.clientY - r.top - R) / R; const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
+    JOY.x = x; JOY.y = y; knob.style.transform = `translate(${x * R * 0.6}px, ${y * R * 0.6}px)`;
+  };
+  joy.addEventListener('pointerdown', (e) => { audioInit(); JOY.id = e.pointerId; try { joy.setPointerCapture(e.pointerId); } catch (err) {} move(e); e.preventDefault(); });
+  joy.addEventListener('pointermove', (e) => { if (e.pointerId === JOY.id) move(e); });
+  const up = (e) => { if (e.pointerId !== JOY.id) return; JOY.id = null; JOY.x = JOY.y = 0; knob.style.transform = ''; };
+  joy.addEventListener('pointerup', up); joy.addEventListener('pointercancel', up);
+  const jb = $('jumpbtn');
+  jb.addEventListener('pointerdown', (e) => { KEYS.Space = true; e.preventDefault(); });
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) jb.addEventListener(ev, () => { KEYS.Space = false; });
+  jb.addEventListener('contextmenu', (e) => e.preventDefault());
+}
 document.addEventListener('click', () => audioInit(), { once: true });
 
 function onResize() {
@@ -2032,7 +2139,7 @@ function onResize() {
   if (!composer) return;
   composer.setSize(w, h); fxaaPass.material.uniforms.resolution.value.set(1 / (w * renderer.getPixelRatio()), 1 / (h * renderer.getPixelRatio()));
 }
-addEventListener('resize', onResize);
+addEventListener('resize', () => { onResize(); if (document.body.dataset.sheet) showSheet(document.body.dataset.sheet); });
 
 async function boot() {
   try { const s = JSON.parse(store.get('cfg')); if (s) Object.assign(CFG, s); } catch (e) {}
@@ -2054,7 +2161,9 @@ async function boot() {
   controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 2; controls.maxDistance = 90; controls.maxPolarAngle = Math.PI * 0.49;
   buildControls();
-  $('lang').onclick = toggleLang;
+  $('lang').onclick = toggleLang; $('lang2').onclick = toggleLang;
+  // the Rabbi Akiva story shows once on desktop (on phones only from its preset)
+  if (store.get('story') || MOBILE) $('story').hidden = true;
   applyLang();
   $('cam').querySelectorAll('button').forEach((b) => b.onclick = () => setCam(b.dataset.c));
   SKY.time = CFG.hour; updateSky(0);

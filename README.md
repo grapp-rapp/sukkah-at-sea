@@ -15,6 +15,7 @@ Change anything, and ~30 halachot of sukkah are checked live, each with its sour
 - **Check:** a verdict (Kosher / Kosher, but… / Pasul), “Can you eat here right now?”, and every rule with its source. Shade and air gaps are measured from the actual 3D schach.
 - **Walk the ship:** W A S D to walk, Space to jump, Shift to run. Climb the stool onto the truck bed and into the sukkah, go into the wheelhouse cabin, and take the stairs up to the upper deck.
 - **English / עברית** toggle.
+- **Works on phones:** a Build / Halacha / View tab bar, bottom sheets (side sheets in landscape), a live Kosher/Pasul chip, and a joystick + jump button for walking the deck. Drag with one finger to look around, pinch to zoom.
 
 Presets: Chabad sukkah-mobile · Tiny roof sukkah · Rabbi Akiva’s ship · Under the awning · Plastic tarp · Two walls + tefach · Storm at sea · Gap in the schach.
 

@@ -1,5 +1,7 @@
 <title>Sukkah at Sea</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;500;600;700&display=swap">
@@ -87,20 +89,71 @@ select option{background:#12202c}
 [dir=rtl] #v-he{direction:ltr}
 #hud-walk{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 3px #000;pointer-events:none}
 #where{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);font-size:13px;padding:5px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
-@media (max-width:960px){
-  .panel{top:auto;bottom:56px;left:8px!important;right:8px!important;width:auto!important;height:46vh}
+/* ---------- phones & small tablets ---------- */
+#mbar,#joy,#jumpbtn{display:none}
+.mtabs .ico{font-size:17px;line-height:1;display:block;margin-bottom:2px}
+@media (max-width:960px), (max-height:540px) and (pointer:coarse){
+  html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+  #mbar{display:flex;position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:8px;right:8px;justify-content:space-between;align-items:center;gap:8px;pointer-events:none;z-index:5}
+  #mbar > *{pointer-events:auto}
+  #vchip{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-family:var(--title);font-weight:700;font-size:16px}
+  #vchip i{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px currentColor}
+  #vchip.warn i{background:var(--warn)}#vchip.fail i{background:var(--fail)}
+  #vchip small{font-family:var(--body);font-weight:500;font-size:12px;color:var(--dim)}
+  #mbar .langbtn{float:none;margin:0;padding:7px 12px;background:var(--panel);backdrop-filter:blur(10px)}
+  #build .langbtn{display:none}
+  .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:6;gap:0;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(10,15,20,.9);border-top:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .mtabs button{all:unset;flex:1;text-align:center;padding:6px 4px;border-radius:10px;font-size:12px;font-weight:600;color:var(--dim);cursor:pointer}
+  .mtabs button.on{color:var(--ink);background:rgba(233,183,95,.18)}
+  .panel{top:auto;bottom:calc(60px + env(safe-area-inset-bottom,0px));left:6px!important;right:6px!important;width:auto!important;height:min(56dvh,560px);border-radius:16px}
   .panel.hide{display:none}
-  .mtabs{display:flex;position:fixed;top:10px;left:50%;transform:translateX(-50%);gap:6px;background:var(--panel);border-radius:999px;padding:4px;border:1px solid var(--line)}
-  .mtabs button{all:unset;padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer}
-  .mtabs button.on{background:rgba(233,183,95,.22)}
-  #story{display:none}
+  .phead{padding:12px 14px 8px}
+  .phead h1{font-size:18px}
+  .presets{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .presets::-webkit-scrollbar{display:none}
+  .presets button{white-space:nowrap;padding:7px 11px;font-size:12.5px}
+  .scroll{padding:2px 14px 18px;-webkit-overflow-scrolling:touch}
+  .row{grid-template-columns:96px 1fr;margin:10px 0}
+  .seg button{padding:9px 4px;font-size:12.5px}
+  select{padding:9px 8px;font-size:14px}
+  input[type=range]{height:28px}
+  .tog{min-height:30px}.tog input{width:20px;height:20px}
+  #verdict{padding:12px 14px}
+  #v-big{font-size:26px}
+  .filters{overflow-x:auto;padding:8px 14px 0;scrollbar-width:none}
+  .filters button{white-space:nowrap;padding:6px 10px}
+  #cam{bottom:calc(68px + env(safe-area-inset-bottom,0px));max-width:calc(100vw - 16px);overflow-x:auto}
+  #cam button{padding:8px 11px;white-space:nowrap}
+  body.sheet-open #cam, body.sheet-open #where, body.sheet-open #joy, body.sheet-open #jumpbtn{display:none!important}
   #hint{display:none}
+  #where{top:calc(56px + env(safe-area-inset-top,0px));bottom:auto;font-size:12px}
+  #story{top:calc(56px + env(safe-area-inset-top,0px));left:8px;right:8px;transform:none;max-width:none;min-width:0;font-size:12.5px;max-height:34dvh;overflow:auto}
+  body.sheet-open #story{display:none}
+  /* touch controls for walking the deck */
+  body.walk #joy{display:block;position:fixed;left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(124px + env(safe-area-inset-bottom,0px));width:124px;height:124px;border-radius:50%;background:rgba(10,15,20,.35);border:2px solid rgba(255,255,255,.25);touch-action:none;z-index:4}
+  #joy b{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(245,239,227,.85);box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  body.walk #jumpbtn{display:flex;position:fixed;right:calc(22px + env(safe-area-inset-right,0px));bottom:calc(140px + env(safe-area-inset-bottom,0px));width:80px;height:80px;border-radius:50%;align-items:center;justify-content:center;background:rgba(233,183,95,.85);color:#1a1108;font-weight:800;font-size:13px;border:none;touch-action:none;z-index:4;user-select:none;-webkit-user-select:none}
+  body.walk #jumpbtn:active{transform:scale(.93)}
+}
+/* landscape phones: the sheet goes to the side instead */
+@media (max-height:540px) and (orientation:landscape) and (max-width:960px), (max-height:540px) and (orientation:landscape) and (pointer:coarse){
+  .mtabs .ico{display:none}
+  .mtabs{padding-top:4px;padding-bottom:calc(4px + env(safe-area-inset-bottom,0px))}
+  #cam{bottom:calc(46px + env(safe-area-inset-bottom,0px))}
+  .panel{top:calc(52px + env(safe-area-inset-top,0px));bottom:calc(44px + env(safe-area-inset-bottom,0px));height:auto;width:min(46vw,380px)!important;right:auto!important}
+  [dir=rtl] .panel{left:auto!important;right:6px!important}
+  #check{overflow-y:auto;display:block}
+  #check .scroll{overflow:visible}
+  body.walk #joy{bottom:calc(70px + env(safe-area-inset-bottom,0px))}
+  body.walk #jumpbtn{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
 }
 </style>
 
 <canvas id="game"></canvas>
 
-<div class="mtabs"><button data-p="build" class="on" data-i18n="tBuild">Build</button><button data-p="check" data-i18n="tCheck">Halacha</button><button data-p="none" data-i18n="tView">View</button></div>
+<div id="mbar"><button id="vchip"><i></i><span id="vchip-t">…</span></button><button id="lang2" class="langbtn" data-i18n="lang">עברית</button></div>
+<div class="mtabs"><button data-p="build"><span class="ico">🛠️</span><span data-i18n="tBuild">Build</span></button><button data-p="check"><span class="ico">📖</span><span data-i18n="tCheck">Halacha</span></button><button data-p="none" class="on"><span class="ico">🌊</span><span data-i18n="tView">View</span></button></div>
+<div id="joy"><b></b></div><button id="jumpbtn" data-i18n="jump">JUMP</button>
 
 <aside id="build" class="panel">
   <div class="phead"><button id="lang" class="langbtn" data-i18n="lang">עברית</button><h1 data-i18n="title">Sukkah <span>on a car</span> on a boat</h1><p data-i18n="sub">Build it, sail it, and see which halachot it keeps.</p>

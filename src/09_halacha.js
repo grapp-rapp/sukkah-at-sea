@@ -156,6 +156,7 @@ function renderHalacha() {
   big.textContent = v === 'ok' ? tt('Kosher', 'כשרה') : v === 'warn' ? tt('Kosher, but…', 'כשרה, אבל…') : tt('Pasul', 'פסולה');
   $('v-he').textContent = HE() ? (v === 'ok' ? 'Kosher' : v === 'warn' ? 'Kosher bedieved' : 'Pasul') : (v === 'ok' ? 'סוכה כשרה' : v === 'warn' ? 'כשרה בדיעבד' : 'סוכה פסולה');
   $('v-he').style.direction = HE() ? 'ltr' : 'rtl';
+  $('vchip').className = v; $('vchip-t').textContent = big.textContent;
   const nf = R.filter((r) => r.st === 'fail').length, nw = R.filter((r) => r.st === 'warn').length, no = R.filter((r) => r.st === 'ok').length;
   $('v-sub').textContent = v === 'ok' ? tt('Every rule for the sukkah itself is met.', 'כל דיני הסוכה עצמה מתקיימים.') : v === 'warn' ? tt('Valid, but not the ideal way — see the ⚠ items.', 'כשרה, אבל לא לכתחילה — ראו את סעיפי ה־⚠.') : tt('At least one rule makes this sukkah invalid — see the ✕ items.', 'לפחות דין אחד פוסל את הסוכה — ראו את סעיפי ה־✕.');
   $('eat').innerHTML = tt('🍞 <b>Can you eat here right now?</b><br>', '🍞 <b>אפשר לאכול כאן עכשיו?</b><br>') + eatVerdict(R, v);

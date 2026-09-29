@@ -13,6 +13,7 @@ const STR = {
   story: ['<b>Rabbi Akiva’s sukkah</b><br>Rabban Gamliel and Rabbi Akiva were sailing on a ship. Rabbi Akiva built a sukkah on the deck, and the next day the wind blew it away. Rabban Gamliel asked him, <i>“Akiva, where is your sukkah?”</i> — Sukkah 23a. The halacha follows Rabbi Akiva: a sukkah on a ship or a wagon is kosher, as long as it could stand in an ordinary wind on land.',
     '<b>הסוכה של רבי עקיבא</b><br>רבן גמליאל ורבי עקיבא היו באים בספינה. עשה רבי עקיבא סוכה בראש הספינה, ולמחר נשבה הרוח ועקרתה. אמר לו רבן גמליאל: <i>״עקיבא, היכן סוכתך?״</i> — סוכה כג ע״א. הלכה כרבי עקיבא: סוכה בראש העגלה או בראש הספינה כשרה, ובלבד שיכולה לעמוד ברוח מצויה של יבשה.'],
   lang: ['עברית', 'English'],
+  jump: ['JUMP', 'קפיצה'],
 };
 const HINTS = {
   orbit: ['Drag to look around · scroll to zoom · click a rule for its source', 'גררו כדי להסתכל מסביב · גלגלת לזום · לחצו על הלכה כדי לראות את המקור'],

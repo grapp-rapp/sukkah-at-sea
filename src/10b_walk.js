@@ -1,4 +1,5 @@
 // ---------------------------------------------------------------- walking on the ship: collision boxes in boat space (y measured from the deck)
+const JOY = { x: 0, y: 0, id: null };
 const WALK = { pos: new THREE.Vector3(-2.2, 0, -2.5), vy: 0, onGround: true, boxes: [], bob: 0 };
 const STEP = 0.43, RADIUS = 0.28, EYE = 1.64;
 
@@ -74,8 +75,10 @@ function groundUnder(x, z, feet) {
 }
 function updateWalk(dt) {
   const p = WALK.pos;
-  const f = (KEYS.KeyW || KEYS.ArrowUp ? 1 : 0) - (KEYS.KeyS || KEYS.ArrowDown ? 1 : 0), s = (KEYS.KeyD || KEYS.ArrowRight ? 1 : 0) - (KEYS.KeyA || KEYS.ArrowLeft ? 1 : 0);
-  const sp = KEYS.ShiftLeft || KEYS.ShiftRight ? 3.8 : 1.9;
+  // keyboard plus the on-screen joystick (analog)
+  const f = (KEYS.KeyW || KEYS.ArrowUp ? 1 : 0) - (KEYS.KeyS || KEYS.ArrowDown ? 1 : 0) - JOY.y, s = (KEYS.KeyD || KEYS.ArrowRight ? 1 : 0) - (KEYS.KeyA || KEYS.ArrowLeft ? 1 : 0) + JOY.x;
+  const push = Math.min(1, Math.hypot(f, s));
+  const sp = (KEYS.ShiftLeft || KEYS.ShiftRight || Math.hypot(JOY.x, JOY.y) > 0.92 ? 3.8 : 1.9) * push;
   let dx = (-Math.sin(LOOK.yaw) * f + Math.cos(LOOK.yaw) * s), dz = (-Math.cos(LOOK.yaw) * f - Math.sin(LOOK.yaw) * s);
   const l = Math.hypot(dx, dz); if (l > 0) { dx = dx / l * sp * dt; dz = dz / l * sp * dt; }
   // the deck tilts: you slide a touch downhill as the ship rolls
@@ -97,6 +100,6 @@ function updateWalk(dt) {
   else if (p.y > 2.6) where = tt('On the upper deck', 'על הסיפון העליון');
   else if (p.y > 0.3 && CFG.vehicle === 'pickup' && p.z > SUK.vehicle.position.z + 0.6) where = tt('On the truck bed', 'בארגז הטנדר');
   else where = tt('On deck', 'על הסיפון');
-  $('where').textContent = where + tt(' · Space to jump', ' · רווח לקפיצה');
+  $('where').textContent = where + (MOBILE ? '' : tt(' · Space to jump', ' · רווח לקפיצה'));
 }
 function walkCameraLocal(out) { return out.set(WALK.pos.x, BOAT.deckY + WALK.pos.y + EYE + Math.abs(Math.sin(WALK.bob)) * 0.03, WALK.pos.z); }

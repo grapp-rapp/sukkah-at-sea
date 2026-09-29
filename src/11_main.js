@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------- boot, cameras, rain, gulls, sound, loop
 const clock = new THREE.Clock();
 let composer, bloomPass, fxaaPass, controls, camMode = 'orbit';
-const LOOK = { yaw: 0, pitch: 0, pos: new THREE.Vector3(0, 0, 4), drag: false };
+const LOOK = { yaw: 0, pitch: 0, pos: new THREE.Vector3(0, 0, 4), drag: false, lx: 0, ly: 0 };
 
 async function buildTextures() {
   TEX.wood = genWood(true);
@@ -23,7 +23,7 @@ function buildPost() {
 }
 
 // ---- rain (streaks around the camera, slanted by the wind)
-const RAIN = { mesh: null, n: 4000, pos: null };
+const RAIN = { mesh: null, n: MOBILE ? 1500 : 4000, pos: null };
 function buildRain() {
   const g = new THREE.BufferGeometry(); const p = new Float32Array(RAIN.n * 6);
   for (let i = 0; i < RAIN.n; i++) { const x = rr(-25, 25), y = rr(0, 22), z = rr(-25, 25); p.set([x, y, z, x, y - 0.4, z], i * 6); }
@@ -100,7 +100,8 @@ function updateSound(t) {
 function sukkahWorldCenter(out) { const H = CFG.h / 100; return SUK.root.localToWorld(out.set(0, H * 0.55, 0)); }
 function frameOrbit() {
   sukkahWorldCenter(controls.target);
-  const off = new THREE.Vector3(-5.5, 3.2, -6.5).multiplyScalar(0.8 + Math.max(CFG.w, CFG.d) / 400);
+  // narrow portrait screens need the camera further back to fit the truck
+  const off = new THREE.Vector3(-5.5, 3.2, -6.5).multiplyScalar((0.8 + Math.max(CFG.w, CFG.d) / 400) * Math.max(1, Math.pow(1 / camera.aspect, 0.55)));
   camera.position.copy(controls.target).add(off);
 }
 function setCam(mode) {
@@ -112,6 +113,8 @@ function setCam(mode) {
   if (mode === 'deck') { LOOK.yaw = Math.PI * 1.25; LOOK.pitch = 0.05; }
   $('hint').textContent = tr(HINTS[mode]);
   $('hud-walk').hidden = $('where').hidden = mode !== 'deck';
+  document.body.classList.toggle('walk', mode === 'deck');
+  if (mode !== 'deck') { JOY.x = JOY.y = 0; JOY.id = null; $('joy').firstElementChild.style.transform = ''; KEYS.Space = false; }
 }
 const _prevT = new THREE.Vector3();
 function updateCamera(dt) {
@@ -137,9 +140,36 @@ function updateCamera(dt) {
 const KEYS = {};
 addEventListener('keydown', (e) => { if ((e.target.tagName === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox') || e.target.tagName === 'SELECT') return; KEYS[e.code] = true; if (camMode === 'deck' && ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { e.preventDefault(); if (e.target.blur) e.target.blur(); } });
 addEventListener('keyup', (e) => { KEYS[e.code] = false; });
-canvas.addEventListener('pointerdown', (e) => { audioInit(); if (camMode === 'inside' || camMode === 'deck') { LOOK.drag = true; canvas.setPointerCapture(e.pointerId); } });
-canvas.addEventListener('pointerup', () => { LOOK.drag = false; });
-canvas.addEventListener('pointermove', (e) => { if (!LOOK.drag) return; LOOK.yaw -= e.movementX * 0.004; LOOK.pitch = clamp(LOOK.pitch - e.movementY * 0.004, -1.2, 1.4); });
+// drag to look (mouse or finger): track deltas ourselves — touch pointers have no movementX on every browser
+canvas.addEventListener('pointerdown', (e) => {
+  audioInit();
+  if ((camMode === 'inside' || camMode === 'deck') && LOOK.drag === false) { LOOK.drag = e.pointerId; LOOK.lx = e.clientX; LOOK.ly = e.clientY; try { canvas.setPointerCapture(e.pointerId); } catch (err) {} }
+});
+const endLook = (e) => { if (LOOK.drag === e.pointerId) LOOK.drag = false; };
+canvas.addEventListener('pointerup', endLook); canvas.addEventListener('pointercancel', endLook);
+canvas.addEventListener('pointermove', (e) => {
+  if (LOOK.drag !== e.pointerId) return;
+  const k = e.pointerType === 'touch' ? 0.0065 : 0.004;
+  LOOK.yaw -= (e.clientX - LOOK.lx) * k; LOOK.pitch = clamp(LOOK.pitch - (e.clientY - LOOK.ly) * k, -1.2, 1.4);
+  LOOK.lx = e.clientX; LOOK.ly = e.clientY;
+});
+// on-screen joystick + jump button for walking the deck on a phone
+{
+  const joy = $('joy'), knob = joy.firstElementChild;
+  const move = (e) => {
+    const r = joy.getBoundingClientRect(), R = r.width / 2;
+    let x = (e.clientX - r.left - R) / R, y = (e.clientY - r.top - R) / R; const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
+    JOY.x = x; JOY.y = y; knob.style.transform = `translate(${x * R * 0.6}px, ${y * R * 0.6}px)`;
+  };
+  joy.addEventListener('pointerdown', (e) => { audioInit(); JOY.id = e.pointerId; try { joy.setPointerCapture(e.pointerId); } catch (err) {} move(e); e.preventDefault(); });
+  joy.addEventListener('pointermove', (e) => { if (e.pointerId === JOY.id) move(e); });
+  const up = (e) => { if (e.pointerId !== JOY.id) return; JOY.id = null; JOY.x = JOY.y = 0; knob.style.transform = ''; };
+  joy.addEventListener('pointerup', up); joy.addEventListener('pointercancel', up);
+  const jb = $('jumpbtn');
+  jb.addEventListener('pointerdown', (e) => { KEYS.Space = true; e.preventDefault(); });
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) jb.addEventListener(ev, () => { KEYS.Space = false; });
+  jb.addEventListener('contextmenu', (e) => e.preventDefault());
+}
 document.addEventListener('click', () => audioInit(), { once: true });
 
 function onResize() {
@@ -148,7 +178,7 @@ function onResize() {
   if (!composer) return;
   composer.setSize(w, h); fxaaPass.material.uniforms.resolution.value.set(1 / (w * renderer.getPixelRatio()), 1 / (h * renderer.getPixelRatio()));
 }
-addEventListener('resize', onResize);
+addEventListener('resize', () => { onResize(); if (document.body.dataset.sheet) showSheet(document.body.dataset.sheet); });
 
 async function boot() {
   try { const s = JSON.parse(store.get('cfg')); if (s) Object.assign(CFG, s); } catch (e) {}
@@ -170,7 +200,9 @@ async function boot() {
   controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 2; controls.maxDistance = 90; controls.maxPolarAngle = Math.PI * 0.49;
   buildControls();
-  $('lang').onclick = toggleLang;
+  $('lang').onclick = toggleLang; $('lang2').onclick = toggleLang;
+  // the Rabbi Akiva story shows once on desktop (on phones only from its preset)
+  if (store.get('story') || MOBILE) $('story').hidden = true;
   applyLang();
   $('cam').querySelectorAll('button').forEach((b) => b.onclick = () => setCam(b.dataset.c));
   SKY.time = CFG.hour; updateSky(0);

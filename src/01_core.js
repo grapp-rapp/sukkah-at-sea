@@ -46,7 +46,10 @@ const store = {
 // ---------------------------------------------------------------- renderer (tuned for integrated GPUs)
 const canvas = $('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', stencil: false });
-const PR = Math.min(window.devicePixelRatio, 1.5) * 0.9;
+// phones: coarse pointer or a small screen → lighter rendering and the touch layout
+const MOBILE = matchMedia('(pointer: coarse)').matches || Math.min(innerWidth, innerHeight) < 540;
+const mobileLayout = () => matchMedia('(max-width:960px), (max-height:540px) and (pointer:coarse)').matches;
+const PR = Math.min(window.devicePixelRatio, MOBILE ? 1.25 : 1.5) * 0.9;
 renderer.setPixelRatio(PR);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
@@ -59,7 +62,7 @@ scene.fog = new THREE.Fog(0xc9d6de, 200, 2600);
 const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.05, 12000);
 const U = { time: { value: 0 }, wind: { value: 1 }, sunDir: { value: new THREE.Vector3(0.3, 0.8, 0.2) } };
 const tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), tmpV3 = new THREE.Vector3(), tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpS = new THREE.Vector3(), tmpE = new THREE.Euler(), tmpC = new THREE.Color();
-const Q = { shadow: 2048 };
+const Q = { shadow: MOBILE ? 1024 : 2048 };
 function shadowed(obj, cast = true, receive = true) { obj.traverse((o) => { if (o.isMesh) { o.castShadow = cast; o.receiveShadow = receive; } }); return obj; }
 function addMesh(geo, mat, x, y, z, parent, cast = true, receive = true) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = cast; m.receiveShadow = receive; parent.add(m); return m; }
 async function loadStep(f, t) { $('lbar').firstElementChild.style.width = (f * 100) + '%'; $('lstep').textContent = t; await nextFrame(); await nextFrame(); }

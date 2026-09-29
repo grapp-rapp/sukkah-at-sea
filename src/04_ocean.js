@@ -100,7 +100,7 @@ function buildOcean() {
         roughnessFactor = mix(roughnessFactor, 0.85, foam);`);
   };
   SEA.mat = mat;
-  const geo = new THREE.PlaneGeometry(1200, 1200, 300, 300); geo.rotateX(-Math.PI / 2);
+  const geo = new THREE.PlaneGeometry(1200, 1200, MOBILE ? 170 : 300, MOBILE ? 170 : 300); geo.rotateX(-Math.PI / 2);
   // denser in the middle where the boat is: squash vertices toward the centre
   const p = geo.attributes.position;
   for (let i = 0; i < p.count; i++) { const x = p.getX(i) / 600, z = p.getZ(i) / 600; const r = Math.max(Math.abs(x), Math.abs(z)); const s = r > 0 ? Math.pow(r, 1.7) / r : 0; p.setX(i, x * s * 600); p.setZ(i, z * s * 600); }

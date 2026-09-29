@@ -105,10 +105,26 @@ function buildControls() {
   // rule filters
   for (const b of $('filters').children) b.onclick = () => { RULE_FILTER = b.dataset.f; [...$('filters').children].forEach((x) => x.classList.toggle('on', x === b)); renderHalacha(); };
   // mobile tabs
-  for (const b of document.querySelectorAll('.mtabs button')) b.onclick = () => {
-    document.querySelectorAll('.mtabs button').forEach((x) => x.classList.toggle('on', x === b));
-    $('build').classList.toggle('hide', b.dataset.p !== 'build'); $('check').classList.toggle('hide', b.dataset.p !== 'check');
-  };
+  for (const b of document.querySelectorAll('.mtabs button')) b.onclick = () => showSheet(b.dataset.p);
+  $('vchip').onclick = () => showSheet(document.body.dataset.sheet === 'check' ? 'none' : 'check');
+  showSheet(document.body.dataset.sheet || (mobileLayout() ? 'none' : 'build'));
+}
+// phone layout: one bottom sheet at a time (Build / Halacha), or none to just look
+function showSheet(p) {
+  document.body.dataset.sheet = p;
+  document.querySelectorAll('.mtabs button').forEach((x) => x.classList.toggle('on', x.dataset.p === p));
+  $('build').classList.toggle('hide', p !== 'build'); $('check').classList.toggle('hide', p !== 'check');
+  document.body.classList.toggle('sheet-open', mobileLayout() && p !== 'none');
+  fitViewToSheet();
+}
+// keep the sukkah in the part of the screen the sheet doesn't cover
+function fitViewToSheet() {
+  const W = innerWidth, H = innerHeight;
+  const panel = document.body.classList.contains('sheet-open') ? $(document.body.dataset.sheet) : null;
+  if (!panel) { camera.clearViewOffset(); return; }
+  const r = panel.getBoundingClientRect();
+  if (r.width < W * 0.7) camera.setViewOffset(W, H, (r.left < W / 2 ? -1 : 1) * r.width / 2, 0, W, H);
+  else camera.setViewOffset(W, H, 0, (H - r.top) / 2, W, H);
 }
 const PRESET_BASE = { ...PRESETS[0][1], walls: '4', wallType: 'canvas', tied: true, supports: 'wood', order: 'walls', old: false, renewed: false, permission: true };
 function applyPreset(p, keepRest = false) {
