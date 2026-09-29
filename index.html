@@ -1,0 +1,2104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sukkah at Sea</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ink:#f5efe3; --dim:rgba(245,239,227,.64); --faint:rgba(245,239,227,.32);
+  --panel:rgba(12,18,24,.72); --line:rgba(245,239,227,.14); --field:rgba(255,255,255,.06);
+  --gold:#e9b75f; --ok:#7fd08a; --warn:#f0c255; --fail:#ef6a55; --info:#7fb8ef;
+  --title:"Frank Ruhl Libre",Georgia,serif; --body:"Assistant","Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;background:#07101a;color:var(--ink);font-family:var(--body)}
+#game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.panel{position:fixed;top:12px;bottom:12px;width:340px;background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+#build{left:12px}
+#check{right:12px;width:380px}
+.phead{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.phead h1{margin:0;font-family:var(--title);font-size:21px;line-height:1.15}
+.phead h1 span{color:var(--gold)}
+.phead p{margin:4px 0 0;font-size:12.5px;color:var(--dim)}
+.scroll{overflow-y:auto;padding:4px 16px 16px;flex:1}
+.scroll::-webkit-scrollbar{width:8px}.scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+.sec{margin-top:14px}
+.sec h2{margin:0 0 8px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.row{display:grid;grid-template-columns:118px 1fr;align-items:center;gap:8px;margin:7px 0;font-size:13.5px}
+.row label{color:var(--dim)}
+.row .val{font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.rng{display:grid;grid-template-columns:1fr 78px;gap:8px;align-items:center}
+.rng output{font-size:12.5px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1}
+.rng output small{display:block;color:var(--dim);font-size:11px}
+select{width:100%;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px 8px;font:inherit;font-size:13px}
+select option{background:#12202c}
+.seg{display:flex;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:2px}
+.seg button{all:unset;flex:1;text-align:center;padding:5px 4px;border-radius:6px;font-size:12.5px;cursor:pointer;color:var(--dim)}
+.seg button.on{background:rgba(233,183,95,.22);color:var(--ink);font-weight:600}
+.tog{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px}
+.tog input{accent-color:var(--gold);width:16px;height:16px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.presets button{all:unset;cursor:pointer;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--field)}
+.presets button:hover{border-color:var(--gold)}
+/* verdict */
+#verdict{padding:14px 16px;border-bottom:1px solid var(--line)}
+#v-big{font-family:var(--title);font-size:30px;font-weight:900;line-height:1}
+#v-big.ok{color:var(--ok)}#v-big.warn{color:var(--warn)}#v-big.fail{color:var(--fail)}
+#v-he{font-family:var(--title);font-size:17px;color:var(--dim);direction:rtl;margin-top:2px}
+#v-sub{font-size:13px;color:var(--dim);margin-top:6px;line-height:1.45}
+#eat{margin-top:10px;padding:9px 11px;border-radius:9px;background:var(--field);border:1px solid var(--line);font-size:13px;line-height:1.45}
+#eat b{font-weight:700}
+.counts{display:flex;gap:10px;margin-top:10px;font-size:12px;color:var(--dim)}
+.counts span b{font-size:15px;color:var(--ink);margin-right:3px}
+.rule{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.rule .ic{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#0b1016;margin-top:1px}
+.rule.ok .ic{background:var(--ok)}.rule.warn .ic{background:var(--warn)}.rule.fail .ic{background:var(--fail)}.rule.info .ic{background:var(--info)}
+.rule .t{font-size:13.5px;font-weight:600;line-height:1.3}
+.rule .d{font-size:12.5px;color:var(--dim);line-height:1.45;margin-top:2px}
+.rule .src{font-size:11.5px;color:var(--gold);margin-top:3px;display:none}
+.rule.open .src{display:block}
+.rule .grp{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.filters{display:flex;gap:6px;padding:10px 16px 0}
+.filters button{all:unset;cursor:pointer;font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim)}
+.filters button.on{color:var(--ink);border-color:var(--gold)}
+/* camera bar */
+#cam{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px;backdrop-filter:blur(10px)}
+#cam button{all:unset;cursor:pointer;padding:6px 13px;border-radius:999px;font-size:13px;color:var(--dim)}
+#cam button.on{background:rgba(233,183,95,.22);color:var(--ink)}
+#hint{position:fixed;left:50%;bottom:62px;transform:translateX(-50%);font-size:12px;color:var(--dim);text-shadow:0 1px 4px #000;white-space:nowrap}
+#story{position:fixed;left:50%;top:14px;transform:translateX(-50%);max-width:min(520px,calc(100vw - 780px));min-width:260px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.5;backdrop-filter:blur(10px)}
+#story b{font-family:var(--title);font-size:15px}
+#story .x{float:right;cursor:pointer;color:var(--dim);margin-left:8px}
+#loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#12304a,#050a10 70%);z-index:10}
+#loading .he{font-family:var(--title);font-weight:900;font-size:64px;color:var(--gold);direction:rtl}
+#loading .en{font-family:var(--title);font-size:22px;letter-spacing:.25em;text-transform:uppercase;margin-top:4px}
+#lbar{width:280px;height:3px;background:rgba(255,255,255,.1);margin-top:28px;border-radius:2px;overflow:hidden}#lbar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+#lstep{margin-top:10px;font-size:12.5px;color:var(--dim)}
+.mtabs{display:none}
+.langbtn{all:unset;float:right;cursor:pointer;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--gold);color:var(--gold);margin-left:8px}
+.langbtn:hover{background:rgba(233,183,95,.15)}
+[dir=rtl] .langbtn{float:left;margin-left:0;margin-right:8px}
+[dir=rtl] #build{left:auto;right:12px}
+[dir=rtl] #check{right:auto;left:12px}
+[dir=rtl] .rng output{text-align:left}
+[dir=rtl] .sec h2,[dir=rtl] .rule .grp{letter-spacing:0}
+[dir=rtl] #v-he{direction:ltr}
+#hud-walk{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 3px #000;pointer-events:none}
+#where{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);font-size:13px;padding:5px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
+@media (max-width:960px){
+  .panel{top:auto;bottom:56px;left:8px!important;right:8px!important;width:auto!important;height:46vh}
+  .panel.hide{display:none}
+  .mtabs{display:flex;position:fixed;top:10px;left:50%;transform:translateX(-50%);gap:6px;background:var(--panel);border-radius:999px;padding:4px;border:1px solid var(--line)}
+  .mtabs button{all:unset;padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer}
+  .mtabs button.on{background:rgba(233,183,95,.22)}
+  #story{display:none}
+  #hint{display:none}
+}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+
+
+<canvas id="game"></canvas>
+
+<div class="mtabs"><button data-p="build" class="on" data-i18n="tBuild">Build</button><button data-p="check" data-i18n="tCheck">Halacha</button><button data-p="none" data-i18n="tView">View</button></div>
+
+<aside id="build" class="panel">
+  <div class="phead"><button id="lang" class="langbtn" data-i18n="lang">עברית</button><h1 data-i18n="title">Sukkah <span>on a car</span> on a boat</h1><p data-i18n="sub">Build it, sail it, and see which halachot it keeps.</p>
+    <div class="presets" id="presets"></div>
+  </div>
+  <div class="scroll" id="controls"></div>
+</aside>
+
+<aside id="check" class="panel hide">
+  <div id="verdict">
+    <div id="v-big">…</div><div id="v-he"></div><div id="v-sub"></div>
+    <div id="eat"></div>
+    <div class="counts" id="counts"></div>
+  </div>
+  <div class="filters" id="filters"><button data-f="all" class="on" data-i18n="fAll">All</button><button data-f="fail" data-i18n="fFail">Problems</button><button data-f="sukkah" data-i18n="fSukkah">The sukkah</button><button data-f="you" data-i18n="fYou">You & the day</button></div>
+  <div class="scroll" id="rules"></div>
+</aside>
+
+<div id="story"><span class="x" id="story-x">✕</span><b>Rabbi Akiva's sukkah</b><br>Rabban Gamliel and Rabbi Akiva were sailing on a ship. Rabbi Akiva built a sukkah on the deck, and the next day the wind blew it away. Rabban Gamliel asked him, <i>“Akiva, where is your sukkah?”</i> — Sukkah 23a. The halacha follows Rabbi Akiva: a sukkah on a ship or a wagon is kosher, as long as it could stand in an ordinary wind on land.</div>
+<div id="hud-walk" hidden></div><div id="where" hidden></div>
+<div id="hint">Drag to look around · scroll to zoom · click a rule for its source</div>
+<div id="cam"><button data-c="orbit" class="on" data-i18n="cOrbit">Orbit</button><button data-c="inside" data-i18n="cInside">Sit inside</button><button data-c="deck" data-i18n="cDeck">On deck</button><button data-c="sea" data-i18n="cSea">From the sea</button></div>
+
+<div id="loading"><div class="he">סוכה בים</div><div class="en">Sukkah at Sea</div><div id="lbar"><i></i></div><div id="lstep">Preparing…</div></div>
+
+<script type="module">
+// ==== 01_core.js
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+// ---------------------------------------------------------------- utils
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const damp = (a, b, k, dt) => lerp(a, b, 1 - Math.exp(-k * dt));
+const TAU = Math.PI * 2, DEG = Math.PI / 180;
+const nextFrame = () => new Promise((r) => setTimeout(r, 0));
+function mulberry32(a) {
+  return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+let rand = mulberry32(5787);
+const rr = (a, b) => a + (b - a) * rand();
+function makeNoise2D(seed) {
+  const R = mulberry32(seed); const p = new Uint8Array(512);
+  for (let i = 0; i < 256; i++) p[i] = i;
+  for (let i = 255; i > 0; i--) { const j = Math.floor(R() * (i + 1)); const t = p[i]; p[i] = p[j]; p[j] = t; }
+  for (let i = 0; i < 256; i++) p[i + 256] = p[i];
+  const grad = (h, x, y) => { const g = h & 7; const u = g < 4 ? x : y, v = g < 4 ? y : x; return ((g & 1) ? -u : u) + ((g & 2) ? -2 * v : 2 * v); };
+  const fade = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+  return function (x, y) {
+    const X = Math.floor(x) & 255, Y = Math.floor(y) & 255; x -= Math.floor(x); y -= Math.floor(y);
+    const u = fade(x), v = fade(y); const a = p[X] + Y, b = p[X + 1] + Y;
+    return lerp(lerp(grad(p[a], x, y), grad(p[b], x - 1, y), u), lerp(grad(p[a + 1], x, y - 1), grad(p[b + 1], x - 1, y - 1), u), v) * 0.5;
+  };
+}
+const noiseA = makeNoise2D(11), noiseB = makeNoise2D(23), noiseC = makeNoise2D(47);
+function fbm(n, x, y, oct = 5, lac = 2, gain = 0.5) { let a = 1, f = 1, s = 0, norm = 0; for (let i = 0; i < oct; i++) { s += a * n(x * f, y * f); norm += a; a *= gain; f *= lac; } return s / norm; }
+const store = {
+  get(k) { try { return localStorage.getItem('sukkahsea.' + k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem('sukkahsea.' + k, v); } catch (e) {} },
+};
+
+// ---------------------------------------------------------------- renderer (tuned for integrated GPUs)
+const canvas = $('game');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', stencil: false });
+const PR = Math.min(window.devicePixelRatio, 1.5) * 0.9;
+renderer.setPixelRatio(PR);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const maxAniso = renderer.capabilities.getMaxAnisotropy();
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xc9d6de, 200, 2600);
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.05, 12000);
+const U = { time: { value: 0 }, wind: { value: 1 }, sunDir: { value: new THREE.Vector3(0.3, 0.8, 0.2) } };
+const tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), tmpV3 = new THREE.Vector3(), tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpS = new THREE.Vector3(), tmpE = new THREE.Euler(), tmpC = new THREE.Color();
+const Q = { shadow: 2048 };
+function shadowed(obj, cast = true, receive = true) { obj.traverse((o) => { if (o.isMesh) { o.castShadow = cast; o.receiveShadow = receive; } }); return obj; }
+function addMesh(geo, mat, x, y, z, parent, cast = true, receive = true) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = cast; m.receiveShadow = receive; parent.add(m); return m; }
+async function loadStep(f, t) { $('lbar').firstElementChild.style.width = (f * 100) + '%'; $('lstep').textContent = t; await nextFrame(); await nextFrame(); }
+// zero-length normals turn into NaN pixels (and NaN bloom)
+function fixNormals(g) { const n = g.attributes.normal; if (!n) return g; for (let i = 0; i < n.count; i++) { const x = n.getX(i), y = n.getY(i), z = n.getZ(i); if (!(x * x + y * y + z * z > 1e-10)) n.setXYZ(i, 0, 1, 0); } return g; }
+
+// ==== 01b_i18n.js
+// ---------------------------------------------------------------- English / Hebrew
+const LANG = { cur: store.get('lang') === 'he' ? 'he' : 'en' };
+const HE = () => LANG.cur === 'he';
+const tt = (en, he) => (LANG.cur === 'he' ? he : en);
+const tr = (x) => (Array.isArray(x) ? (LANG.cur === 'he' ? x[1] : x[0]) : x);
+// static page text, keyed by data-i18n
+const STR = {
+  title: ['Sukkah <span>on a car</span> on a boat', 'סוכה <span>על מכונית</span> על ספינה'],
+  sub: ['Build it, sail it, and see which halachot it keeps.', 'בנו אותה, הפליגו איתה, ובדקו אילו הלכות היא מקיימת.'],
+  fAll: ['All', 'הכול'], fFail: ['Problems', 'בעיות'], fSukkah: ['The sukkah', 'הסוכה'], fYou: ['You & the day', 'אתם והיום'],
+  cOrbit: ['Orbit', 'סיבוב'], cInside: ['Sit inside', 'לשבת בפנים'], cDeck: ['On deck', 'על הסיפון'], cSea: ['From the sea', 'מהים'],
+  tBuild: ['Build', 'בנייה'], tCheck: ['Halacha', 'הלכה'], tView: ['View', 'תצוגה'],
+  story: ['<b>Rabbi Akiva’s sukkah</b><br>Rabban Gamliel and Rabbi Akiva were sailing on a ship. Rabbi Akiva built a sukkah on the deck, and the next day the wind blew it away. Rabban Gamliel asked him, <i>“Akiva, where is your sukkah?”</i> — Sukkah 23a. The halacha follows Rabbi Akiva: a sukkah on a ship or a wagon is kosher, as long as it could stand in an ordinary wind on land.',
+    '<b>הסוכה של רבי עקיבא</b><br>רבן גמליאל ורבי עקיבא היו באים בספינה. עשה רבי עקיבא סוכה בראש הספינה, ולמחר נשבה הרוח ועקרתה. אמר לו רבן גמליאל: <i>״עקיבא, היכן סוכתך?״</i> — סוכה כג ע״א. הלכה כרבי עקיבא: סוכה בראש העגלה או בראש הספינה כשרה, ובלבד שיכולה לעמוד ברוח מצויה של יבשה.'],
+  lang: ['עברית', 'English'],
+};
+const HINTS = {
+  orbit: ['Drag to look around · scroll to zoom · click a rule for its source', 'גררו כדי להסתכל מסביב · גלגלת לזום · לחצו על הלכה כדי לראות את המקור'],
+  sea: ['Drag to look around · scroll to zoom · click a rule for its source', 'גררו כדי להסתכל מסביב · גלגלת לזום · לחצו על הלכה כדי לראות את המקור'],
+  inside: ['Drag to look around — you are sitting in the sukkah', 'גררו כדי להסתכל מסביב — אתם יושבים בסוכה'],
+  deck: ['Drag to look · W A S D to walk on the deck', 'גררו כדי להסתכל · W A S D כדי ללכת על הסיפון'],
+};
+function applyLang() {
+  document.documentElement.lang = LANG.cur;
+  document.documentElement.dir = HE() ? 'rtl' : 'ltr';
+  for (const el of document.querySelectorAll('[data-i18n]')) el.innerHTML = tr(STR[el.dataset.i18n]);
+  $('story').innerHTML = `<span class="x" id="story-x">✕</span>` + tr(STR.story);
+  $('story-x').onclick = () => { $('story').hidden = true; store.set('story', '1'); };
+  if (typeof buildControls === 'function' && $('controls').childElementCount) { buildControls(); renderHalacha(); $('hint').textContent = tr(HINTS[camMode]); }
+}
+function toggleLang() { LANG.cur = HE() ? 'en' : 'he'; store.set('lang', LANG.cur); applyLang(); }
+
+// ==== 02_textures.js
+// ---------------------------------------------------------------- procedural textures
+const TEX = {};
+
+function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function toTex(c, { srgb = true, repeat = null, mips = true } = {}) {
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = Math.min(8, maxAniso);
+  if (repeat) t.repeat.set(repeat[0], repeat[1]);
+  if (!mips) { t.generateMipmaps = false; t.minFilter = THREE.LinearFilter; }
+  return t;
+}
+// Build colour / normal / roughness maps from per-pixel callbacks.
+// fn(u, v) -> { h, r, g, b, ro } (h: height 0..1, rgb 0..1, ro: roughness 0..1)
+function genPBR(w, h, fn, normalStrength = 2.0) {
+  const H = new Float32Array(w * h);
+  const col = mkCanvas(w, h), nrm = mkCanvas(w, h), rgh = mkCanvas(w, h);
+  const cc = col.getContext('2d'), nc = nrm.getContext('2d'), rc = rgh.getContext('2d');
+  const ci = cc.createImageData(w, h), ni = nc.createImageData(w, h), ri = rc.createImageData(w, h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const s = fn(x / w, y / h);
+    const i = y * w + x, j = i * 4;
+    H[i] = s.h;
+    ci.data[j] = clamp(s.r, 0, 1) * 255; ci.data[j + 1] = clamp(s.g, 0, 1) * 255; ci.data[j + 2] = clamp(s.b, 0, 1) * 255; ci.data[j + 3] = 255;
+    const ro = clamp(s.ro ?? 0.8, 0, 1) * 255;
+    ri.data[j] = ro; ri.data[j + 1] = ro; ri.data[j + 2] = ro; ri.data[j + 3] = 255;
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const xl = (x - 1 + w) % w, xr = (x + 1) % w, yu = (y - 1 + h) % h, yd = (y + 1) % h;
+    const dx = (H[y * w + xr] - H[y * w + xl]) * normalStrength;
+    const dy = (H[yd * w + x] - H[yu * w + x]) * normalStrength;
+    const l = Math.hypot(dx, dy, 1);
+    const j = (y * w + x) * 4;
+    ni.data[j] = (-dx / l * 0.5 + 0.5) * 255; ni.data[j + 1] = (dy / l * 0.5 + 0.5) * 255; ni.data[j + 2] = (1 / l * 0.5 + 0.5) * 255; ni.data[j + 3] = 255;
+  }
+  cc.putImageData(ci, 0, 0); nc.putImageData(ni, 0, 0); rc.putImageData(ri, 0, 0);
+  return { map: toTex(col), normalMap: toTex(nrm, { srgb: false }), roughnessMap: toTex(rgh, { srgb: false }) };
+}
+function setRepeat(set, x, y) { for (const k of ['map', 'normalMap', 'roughnessMap']) if (set[k]) set[k].repeat.set(x, y); return set; }
+function cloneSet(set) { const o = {}; for (const k of ['map', 'normalMap', 'roughnessMap']) if (set[k]) { o[k] = set[k].clone(); o[k].needsUpdate = true; } return o; }
+
+// ---- ashlar / slab layout shared by wall stone and paving
+function genWood(light = true) {
+  // grain runs along v (texture height = length)
+  const base = light ? [0.80, 0.63, 0.43] : [0.52, 0.36, 0.22];
+  return genPBR(256, 1024, (u, v) => {
+    const warp = fbm(noiseA, u * 3, v * 1.5, 3) * 3.0;
+    const ring = Math.sin((u * 18 + warp) * Math.PI);
+    const grain = Math.pow(Math.abs(ring), 0.35);
+    const fine = noiseB(u * 180, v * 8) * 0.5 + 0.5;
+    const knot = Math.max(0, 1 - Math.hypot((u - 0.55) * 3, (v - 0.37) * 12)) + Math.max(0, 1 - Math.hypot((u - 0.2) * 3.4, (v - 0.83) * 14));
+    const d = 0.18 * (1 - grain) + fine * 0.06 + knot * 0.35;
+    return { h: grain * 0.3 + fine * 0.1 - knot * 0.2, r: base[0] * (1 - d), g: base[1] * (1 - d * 1.1), b: base[2] * (1 - d * 1.2), ro: 0.72 + fine * 0.1 };
+  }, 1.2);
+}
+
+function genWeave() {
+  // tiny canvas weave; repeated densely
+  return genPBR(128, 128, (u, v) => {
+    const X = u * 32, Y = v * 32;
+    const cx = Math.floor(X), cy = Math.floor(Y);
+    const over = (cx + cy) & 1;
+    const fx = X - cx, fy = Y - cy;
+    const warp = Math.sin(fx * Math.PI) * (over ? 1 : 0.6);
+    const weft = Math.sin(fy * Math.PI) * (over ? 0.6 : 1);
+    const h = Math.max(warp * (over ? 1 : 0.5), weft * (over ? 0.5 : 1));
+    const n = noiseA(u * 90, v * 90) * 0.05;
+    const c = 0.92 + h * 0.06 + n;
+    return { h, r: c, g: c, b: c, ro: 0.95 };
+  }, 1.6);
+}
+
+function paintTex(w, h, draw, opts) { const c = mkCanvas(w, h); draw(c.getContext('2d'), w, h); return toTex(c, opts); }
+
+function drawPomegranate(g, x, y, s, a = 0) {
+  g.save(); g.translate(x, y); g.rotate(a);
+  const gr = g.createRadialGradient(-s * 0.3, -s * 0.3, s * 0.1, 0, 0, s);
+  gr.addColorStop(0, '#e2553f'); gr.addColorStop(1, '#8a1a1c');
+  g.fillStyle = gr; g.beginPath(); g.arc(0, 0, s, 0, TAU); g.fill();
+  g.fillStyle = '#7a1718';
+  g.beginPath(); g.moveTo(-s * 0.3, -s * 0.9); for (let i = 0; i <= 6; i++) { const ax = -s * 0.3 + i * s * 0.1; g.lineTo(ax, -s * (i & 1 ? 1.25 : 1.1)); } g.lineTo(s * 0.3, -s * 0.9); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.ellipse(-s * 0.35, -s * 0.35, s * 0.18, s * 0.1, -0.7, 0, TAU); g.fill();
+  g.restore();
+}
+function drawGrapes(g, x, y, s) {
+  for (let r = 0; r < 5; r++) for (let i = 0; i <= 4 - r; i++) {
+    const gx = x + (i - (4 - r) / 2) * s * 0.9, gy = y + r * s * 0.8;
+    const gr = g.createRadialGradient(gx - s * 0.2, gy - s * 0.2, 1, gx, gy, s * 0.5);
+    gr.addColorStop(0, '#9b6fb8'); gr.addColorStop(1, '#3d1f55');
+    g.fillStyle = gr; g.beginPath(); g.arc(gx, gy, s * 0.48, 0, TAU); g.fill();
+  }
+  g.fillStyle = '#4f7a2b'; g.beginPath(); g.ellipse(x + s * 1.2, y - s * 0.6, s * 1.1, s * 0.6, -0.4, 0, TAU); g.fill();
+}
+function drawOliveBranch(g, x, y, len, a) {
+  g.save(); g.translate(x, y); g.rotate(a);
+  g.strokeStyle = '#6b5a3a'; g.lineWidth = len * 0.02; g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(len * 0.5, -len * 0.08, len, 0); g.stroke();
+  for (let i = 1; i < 9; i++) {
+    const t = i / 9, px = len * t, py = -len * 0.08 * Math.sin(t * Math.PI);
+    for (const sgn of [-1, 1]) {
+      g.save(); g.translate(px, py); g.rotate(sgn * 0.7);
+      g.fillStyle = sgn > 0 ? '#7d8f55' : '#a6b184';
+      g.beginPath(); g.ellipse(len * 0.07, 0, len * 0.08, len * 0.018, 0, 0, TAU); g.fill(); g.restore();
+    }
+  }
+  g.restore();
+}
+function drawSkyline(g, x0, y0, w, h, col) {
+  // Old City walls + Tower of David + Dome silhouette
+  g.fillStyle = col; g.beginPath(); g.moveTo(x0, y0 + h);
+  const pts = [[0, 0.62], [0.06, 0.62], [0.06, 0.5], [0.1, 0.5], [0.1, 0.62], [0.2, 0.62], [0.2, 0.2], [0.215, 0.2], [0.215, 0.1], [0.23, 0.02], [0.245, 0.1], [0.245, 0.2], [0.26, 0.2], [0.26, 0.62],
+    [0.38, 0.62], [0.38, 0.45], [0.42, 0.45], [0.42, 0.62], [0.5, 0.62]];
+  for (const [px, py] of pts) g.lineTo(x0 + px * w, y0 + py * h);
+  // dome
+  g.lineTo(x0 + 0.55 * w, y0 + 0.62 * h); g.lineTo(x0 + 0.55 * w, y0 + 0.45 * h);
+  g.arc(x0 + 0.6 * w, y0 + 0.45 * h, 0.05 * w, Math.PI, 0);
+  g.lineTo(x0 + 0.65 * w, y0 + 0.62 * h);
+  const pts2 = [[0.72, 0.62], [0.72, 0.52], [0.76, 0.52], [0.76, 0.62], [0.86, 0.62], [0.86, 0.3], [0.875, 0.22], [0.89, 0.3], [0.89, 0.62], [1, 0.62], [1, 1]];
+  for (const [px, py] of pts2) g.lineTo(x0 + px * w, y0 + py * h);
+  g.closePath(); g.fill();
+  // crenellations
+  for (let i = 0; i < 48; i++) { const px = x0 + (i / 48) * w; g.fillRect(px, y0 + 0.62 * h - h * 0.03, w / 110, h * 0.03); }
+}
+
+// Printed sukkah wall panel, one of several designs (tex covers 4m x 2m at 2048x1024)
+function genPanelTex(kind) {
+  return paintTex(2048, 1024, (g, W, H) => {
+    // canvas cloth base
+    g.fillStyle = '#f1e8d6'; g.fillRect(0, 0, W, H);
+    const bandCol = kind === 1 ? '#2d4f7c' : kind === 2 ? '#7b2f2a' : '#315a3d';
+    // top / bottom bands
+    g.fillStyle = bandCol; g.fillRect(0, 0, W, 120); g.fillRect(0, H - 110, W, 110);
+    g.fillStyle = '#d6a64d'; g.fillRect(0, 120, W, 10); g.fillRect(0, H - 120, W, 10);
+    for (let x = 30; x < W; x += 140) { drawPomegranate(g, x + 40, 64, 26, 0.2); drawGrapes(g, x + 105, 26, 12); }
+    for (let x = 0; x < W; x += 180) drawOliveBranch(g, x + 20, H - 55, 150, -0.05);
+    // centre
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    if (kind === 0) {
+      // welcome panel with Jerusalem skyline
+      const sky = g.createLinearGradient(0, 180, 0, 760); sky.addColorStop(0, '#f6dca0'); sky.addColorStop(1, '#f1e8d6');
+      g.fillStyle = sky; g.fillRect(260, 180, W - 520, 560);
+      g.fillStyle = '#e9b75f'; g.beginPath(); g.arc(W / 2 + 300, 330, 70, 0, TAU); g.fill();
+      drawSkyline(g, 260, 380, W - 520, 360, '#c79a54');
+      drawSkyline(g, 360, 470, W - 720, 280, '#8f6a36');
+      g.strokeStyle = '#d6a64d'; g.lineWidth = 8; g.strokeRect(260, 180, W - 520, 560);
+      g.fillStyle = bandCol; g.font = '900 110px "Frank Ruhl Libre", serif';
+      g.direction = 'rtl'; g.fillText('ברוכים הבאים לסוכה', W / 2, 820);
+    } else if (kind === 1) {
+      // "and you shall rejoice in your festival" with ushpizin arches
+      g.fillStyle = bandCol; g.font = '900 120px "Frank Ruhl Libre", serif'; g.direction = 'rtl';
+      g.fillText('וְשָׂמַחְתָּ בְּחַגֶּךָ', W / 2, 250);
+      const names = ['אברהם', 'יצחק', 'יעקב', 'משה', 'אהרן', 'יוסף', 'דוד'];
+      for (let i = 0; i < 7; i++) {
+        const cx = 220 + i * (W - 440) / 6, top = 380;
+        g.fillStyle = '#e8d3a6'; g.beginPath(); g.moveTo(cx - 95, 820); g.lineTo(cx - 95, top + 95); g.arc(cx, top + 95, 95, Math.PI, 0); g.lineTo(cx + 95, 820); g.closePath(); g.fill();
+        g.strokeStyle = '#b8863a'; g.lineWidth = 6; g.stroke();
+        g.fillStyle = bandCol; g.font = '700 54px "Frank Ruhl Libre", serif'; g.fillText(names[6 - i], cx, 560);
+        drawPomegranate(g, cx, 700, 30);
+      }
+    } else if (kind === 2) {
+      // seven species
+      g.fillStyle = bandCol; g.font = '900 100px "Frank Ruhl Libre", serif'; g.direction = 'rtl';
+      g.fillText('חַג הַסֻּכּוֹת', W / 2, 230);
+      g.font = '500 44px "Frank Ruhl Libre", serif'; g.fillStyle = '#6b4a24';
+      g.fillText('זְמַן שִׂמְחָתֵנוּ', W / 2, 320);
+      // wheat, grapes, figs, pomegranates, olives, dates
+      for (let i = 0; i < 12; i++) {
+        const x = 200 + i * 150;
+        g.strokeStyle = '#c9a24a'; g.lineWidth = 6; g.beginPath(); g.moveTo(x, 860); g.quadraticCurveTo(x + 20, 640, x + 10, 480); g.stroke();
+        for (let k = 0; k < 7; k++) { g.fillStyle = '#d9b35c'; g.beginPath(); g.ellipse(x + 10 + (k & 1 ? 12 : -12), 500 + k * 22, 11, 20, (k & 1 ? 0.4 : -0.4), 0, TAU); g.fill(); }
+        if (i % 3 === 0) drawGrapes(g, x + 70, 620, 18);
+        if (i % 3 === 1) drawPomegranate(g, x + 70, 700, 34);
+        if (i % 3 === 2) drawOliveBranch(g, x + 30, 600, 120, 0.3);
+      }
+    } else {
+      // plain canvas with a subtle stripe near the top
+      g.fillStyle = bandCol; g.fillRect(0, 150, W, 6);
+    }
+    // fabric fading + light soiling at bottom
+    const fade = g.createLinearGradient(0, 0, 0, H); fade.addColorStop(0, 'rgba(255,255,255,0.05)'); fade.addColorStop(0.85, 'rgba(0,0,0,0)'); fade.addColorStop(1, 'rgba(90,70,40,0.18)');
+    g.fillStyle = fade; g.fillRect(0, 0, W, H);
+    // grommets at top
+    for (let x = 60; x < W; x += 170) { g.fillStyle = '#b8b2a4'; g.beginPath(); g.arc(x, 24, 11, 0, TAU); g.fill(); g.fillStyle = '#2a2520'; g.beginPath(); g.arc(x, 24, 6, 0, TAU); g.fill(); }
+  });
+}
+
+function genKippah() {
+  return paintTex(256, 256, (g, W, H) => {
+    g.fillStyle = '#1d2b4a'; g.fillRect(0, 0, W, H);
+    for (let y = 0; y < H; y += 4) { g.fillStyle = y % 8 ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.12)'; g.fillRect(0, y, W, 2); }
+    g.fillStyle = '#e2b460'; for (let x = 0; x < W; x += 16) { g.fillRect(x, H * 0.7, 8, 8); g.fillRect(x + 8, H * 0.7 + 8, 8, 8); }
+    g.fillStyle = '#ffffff'; g.fillRect(0, H * 0.84, W, 5);
+  });
+}
+
+
+// ==== 03_sky.js
+// ---------------------------------------------------------------- sky, sun & (full) moon over Jerusalem
+const SKY = {
+  time: 14.5,           // hours, local
+  rate: 1 / 100,        // game hours per real second
+  maxTime: 17.75,       // story clamps time until the evening chapter
+  dayK: 1, nightK: 0, low: 0,
+  moonDir: new THREE.Vector3(),
+  envTimer: 99, lastEnvSun: new THREE.Vector3(),
+};
+let sky, skyEnv, skyScene, sunLight, hemi, pmrem, envRT = null;
+
+function patchSkyShader(mat, sunVis) {
+  mat.uniforms.skyGain = { value: 1 };
+  mat.uniforms.sunDiskVis = { value: sunVis };
+  mat.uniforms.nightK = { value: 0 };
+  mat.uniforms.fogCol = { value: new THREE.Color() };
+  mat.uniforms.horizonFog = { value: 0.7 };
+  mat.uniforms.moonDir = { value: SKY.moonDir };
+  mat.uniforms.uT = U.time;
+  mat.fragmentShader = `uniform float skyGain; uniform float sunDiskVis; uniform float nightK; uniform vec3 fogCol; uniform float horizonFog; uniform vec3 moonDir; uniform float uT;
+float hash13(vec3 p3){ p3 = fract(p3 * .1031); p3 += dot(p3, p3.zyx + 31.32); return fract((p3.x + p3.y) * p3.z); }
+` + mat.fragmentShader
+    .replace('L0 += ( vSunE * 19000.0 * Fex ) * sundisk;', 'L0 += ( vSunE * 19000.0 * Fex ) * sundisk * sunDiskVis;')
+    .replace('vec3 retColor = pow( texColor, vec3( 1.0 / ( 1.2 + ( 1.2 * vSunfade ) ) ) );', 'vec3 retColor = pow( texColor, vec3( 0.9 ) );')
+    .replace('gl_FragColor = vec4( retColor, 1.0 );', /* glsl */`
+      retColor *= skyGain;
+      float up01 = clamp(direction.y, 0.0, 1.0);
+      vec3 night = mix(vec3(0.030, 0.040, 0.075), vec3(0.006, 0.010, 0.026), pow(up01, 0.5));
+      vec3 q = direction * 380.0; vec3 cid = floor(q); float h = hash13(cid);
+      float star = 0.0;
+      if (h > 0.9962) { vec3 f = fract(q) - 0.5; star = smoothstep(0.3, 0.0, length(f)) * (h - 0.9962) / 0.0038; star *= 0.65 + 0.35 * sin(uT * (2.0 + h * 5.0) + h * 91.0); }
+      // city light pollution washes out faint stars near the horizon
+      star *= smoothstep(0.08, 0.5, direction.y) * 0.6;
+      night += vec3(0.9, 0.93, 1.0) * star * 1.6;
+      night += vec3(0.16, 0.10, 0.05) * (1.0 - smoothstep(0.0, 0.3, direction.y)) * 0.45;
+      float md = dot(direction, moonDir);
+      float disc = smoothstep(0.99985, 0.99989, md);
+      float maria = 0.8 + 0.2 * sin(direction.x * 1900.0) * sin(direction.z * 1700.0 + direction.y * 1300.0);
+      night += vec3(1.0, 0.97, 0.88) * disc * 6.0 * maria;
+      night += vec3(0.35, 0.42, 0.6) * pow(max(md, 0.0), 80.0) * 0.25;
+      retColor += night * nightK;
+      retColor = mix(retColor, fogCol, horizonFog * (1.0 - smoothstep(-0.02, 0.12, direction.y)));
+      gl_FragColor = vec4( retColor, 1.0 );`);
+}
+
+function buildSky() {
+  sky = new Sky(); sky.scale.setScalar(8000);
+  const su = sky.material.uniforms;
+  su.turbidity.value = 4.5; su.rayleigh.value = 1.6; su.mieCoefficient.value = 0.004; su.mieDirectionalG.value = 0.84;
+  patchSkyShader(sky.material, 1);
+  sky.material.fog = false;
+  scene.add(sky);
+
+  skyScene = new THREE.Scene();
+  skyEnv = new Sky(); skyEnv.scale.setScalar(8000);
+  skyEnv.material.uniforms = Object.assign({}, su);
+  patchSkyShader(skyEnv.material, 0);
+  for (const k of ['skyGain', 'nightK', 'fogCol']) skyEnv.material.uniforms[k] = su[k];
+  skyEnv.material.uniforms.horizonFog = { value: 0.5 };
+  skyScene.add(skyEnv);
+  // warm stone "ground" so the env map gets a bounce from below, like a stone courtyard
+  const ground = new THREE.Mesh(new THREE.SphereGeometry(4000, 32, 16, 0, TAU, Math.PI / 2 + 0.02, Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x6d5c47, side: THREE.BackSide }));
+  ground.name = 'envGround';
+  skyScene.add(ground);
+  pmrem = new THREE.PMREMGenerator(renderer);
+
+  sunLight = new THREE.DirectionalLight(0xffffff, 3);
+  sunLight.castShadow = true;
+  sunLight.shadow.mapSize.set(Q.shadow, Q.shadow);
+  const S = 28, sc = sunLight.shadow.camera;
+  sc.left = -S; sc.right = S; sc.top = S; sc.bottom = -S; sc.near = 1; sc.far = 160;
+  sunLight.shadow.bias = -0.0002; sunLight.shadow.normalBias = 0.025;
+  sunLight.shadow.radius = 3; sunLight.shadow.blurSamples = 12;
+  sunLight.target.position.set(3, 0, 1.5);
+  scene.add(sunLight, sunLight.target);
+
+  hemi = new THREE.HemisphereLight(0xbfd6ff, 0x8a7258, 0.3);
+  scene.add(hemi);
+}
+
+// Jerusalem ~31.8N, early autumn (declination ~ -3 deg), IDT (solar noon ~12:38)
+function sunDirection(hours, out) {
+  const lat = 31.78 * DEG, dec = -3.0 * DEG;
+  const H = (hours - 12.63) * 15 * DEG;
+  const el = Math.asin(Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H));
+  const az = Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(lat) - Math.tan(dec) * Math.cos(lat)); // from south, +west
+  // x = east, -z = north
+  out.set(-Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+  return out;
+}
+
+const _sunCol = new THREE.Color(), _fog = new THREE.Color(), _moonCol = new THREE.Color(0.62, 0.72, 1.0);
+function updateSky(dt) {
+  const sd = sunDirection(SKY.time, U.sunDir.value);
+  // 15 Tishrei: full moon, opposite the sun, a little south
+  sunDirection(SKY.time - 12.1, SKY.moonDir); SKY.moonDir.y = SKY.moonDir.y * 0.95 + 0.02; SKY.moonDir.normalize();
+  const el = sd.y;
+  SKY.dayK = smooth(-0.1, 0.06, el);
+  SKY.nightK = 1 - smooth(-0.2, -0.02, el);
+  SKY.low = 1 - smooth(0.05, 0.4, el);
+
+  const su = sky.material.uniforms;
+  su.sunPosition.value.copy(sd).multiplyScalar(1000);
+  skyEnv.material.uniforms.sunPosition.value.copy(su.sunPosition.value);
+  su.rayleigh.value = lerp(1.6, 2.8, SKY.low);
+  su.turbidity.value = lerp(4.5, 7.5, SKY.low);
+  su.skyGain.value = lerp(0.02, 1.0, SKY.dayK);
+  su.nightK.value = SKY.nightK;
+
+  // sun colour: warm towards the horizon, deep amber at sunset
+  const warm = SKY.low;
+  _sunCol.setRGB(1.0, lerp(0.96, 0.62, warm), lerp(0.9, 0.34, warm));
+  const moonUp = smooth(-0.02, 0.15, SKY.moonDir.y);
+  if (el > -0.02) {
+    sunLight.position.copy(sd).multiplyScalar(80).add(sunLight.target.position);
+    sunLight.color.copy(_sunCol);
+    sunLight.intensity = 4.6 * smooth(-0.02, 0.1, el) * (1 - warm * 0.2);
+  } else {
+    // moonlight takes over the same shadow light
+    sunLight.position.copy(SKY.moonDir).multiplyScalar(80).add(sunLight.target.position);
+    sunLight.color.copy(_moonCol);
+    sunLight.intensity = 0.55 * moonUp * SKY.nightK;
+  }
+  hemi.intensity = lerp(0.14, 0.22, SKY.dayK);
+  hemi.color.setRGB(lerp(0.35, 0.75, SKY.dayK), lerp(0.4, 0.84, SKY.dayK), lerp(0.7, 1.0, SKY.dayK));
+  hemi.groundColor.setRGB(lerp(0.12, 0.55, SKY.dayK) * lerp(1, 1.1, warm), lerp(0.1, 0.45, SKY.dayK), lerp(0.08, 0.34, SKY.dayK));
+
+  // fog/horizon haze
+  _fog.setRGB(lerp(0.035, lerp(0.82, 0.95, warm), SKY.dayK), lerp(0.04, lerp(0.8, 0.66, warm), SKY.dayK), lerp(0.07, lerp(0.78, 0.5, warm), SKY.dayK));
+  scene.fog.color.copy(_fog);
+  su.fogCol.value.copy(_fog);
+  scene.environmentIntensity = lerp(0.45, 0.55, SKY.dayK);
+  renderer.toneMappingExposure = lerp(1.55, 0.74, SKY.dayK) * (1 + SKY.low * SKY.dayK * 0.15);
+
+  // refresh image-based lighting when the sun has moved
+  SKY.envTimer += dt;
+  if (SKY.envTimer > 1.0 && (SKY.lastEnvSun.distanceToSquared(sd) > 0.00025 || !envRT)) {
+    SKY.envTimer = 0; SKY.lastEnvSun.copy(sd);
+    skyScene.getObjectByName('envGround').material.color.setRGB(lerp(0.03, 0.42, SKY.dayK), lerp(0.028, 0.35, SKY.dayK), lerp(0.03, 0.27, SKY.dayK));
+    const old = envRT;
+    envRT = pmrem.fromScene(skyScene, 0, 1, 9000);
+    scene.environment = envRT.texture;
+    if (old) old.dispose();
+  }
+}
+function clockText(h) { const hh = Math.floor(h) % 24, mm = Math.floor((h % 1) * 60); return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0'); }
+
+// ==== 04_ocean.js
+// ---------------------------------------------------------------- open sea: Gerstner waves (GPU + matching CPU sampler for the boat)
+const SEA = { mesh: null, far: null, mat: null, flow: new THREE.Vector2(), waves: [], strength: 0.5, speed: 0 };
+// [dirX, dirZ, steepness, wavelength]; the wind blows from the west (off the sea), so waves travel east (+x)
+const WAVE_BASE = [
+  [1.0, 0.25, 0.16, 62], [0.85, -0.5, 0.13, 37], [0.95, 0.55, 0.12, 21], [0.6, -0.8, 0.09, 11], [1.0, 0.1, 0.07, 6.5],
+];
+const SEA_U = {
+  uWaves: { value: WAVE_BASE.map(() => new THREE.Vector4()) },
+  uFlow: { value: SEA.flow }, uFoam: { value: 0.3 }, uSail: { value: 0 }, uTime: U.time,
+};
+function setSeaState(windKmh, sailing) {
+  const k = clamp(windKmh / 45, 0.08, 1.15);
+  SEA.strength = k;
+  WAVE_BASE.forEach((w, i) => {
+    const d = new THREE.Vector2(w[0], w[1]).normalize();
+    SEA_U.uWaves.value[i].set(d.x, d.y, w[2] * (i < 2 ? k * k * 0.55 + 0.04 : k * 0.7 + 0.05), w[3] * (0.55 + 0.35 * k));
+  });
+  SEA_U.uFoam.value = smooth(20, 60, windKmh);
+  SEA_U.uSail.value = sailing ? 1 : 0;
+}
+// CPU height of the sea surface at (x,z) — matches the shader closely enough to float a boat
+function seaHeight(x, z, t) {
+  let y = 0;
+  const px = x + SEA.flow.x, pz = z + SEA.flow.y;
+  for (const w of SEA_U.uWaves.value) {
+    const k = TAU / w.w, c = Math.sqrt(9.8 / k), a = w.z / k;
+    const f = k * (w.x * px + w.y * pz - c * t);
+    y += a * Math.sin(f);
+  }
+  return y;
+}
+
+function makeRippleNormal() {
+  // tileable ripple normal map (small capillary waves)
+  const set = genPBR(256, 256, (u, v) => {
+    const h = fbm(noiseA, u * 8, v * 8, 4) * 0.6 + fbm(noiseB, u * 16 + 3, v * 16, 3) * 0.4;
+    return { h, r: 0, g: 0, b: 0, ro: 0.1 };
+  }, 4.0);
+  const n = set.normalMap; n.wrapS = n.wrapT = THREE.RepeatWrapping;
+  return n;
+}
+
+function buildOcean() {
+  const ripple = makeRippleNormal();
+  const mat = new THREE.MeshStandardMaterial({ color: 0x0b3346, roughness: 0.07, metalness: 0.0, normalMap: ripple, normalScale: new THREE.Vector2(0.35, 0.35), envMapIntensity: 1.1 });
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, SEA_U);
+    sh.vertexShader = `uniform vec4 uWaves[5]; uniform vec2 uFlow; uniform float uTime; varying vec3 vSeaW; varying float vCrest;
+      vec3 gerstner(vec4 w, vec2 p, inout vec3 tan, inout vec3 bin) {
+        float k = 6.2831853 / w.w; float c = sqrt(9.8 / k); vec2 d = w.xy; float s = w.z;
+        float f = k * (dot(d, p) - c * uTime); float a = s / k;
+        tan += vec3(-d.x * d.x * s * sin(f), d.x * s * cos(f), -d.x * d.y * s * sin(f));
+        bin += vec3(-d.x * d.y * s * sin(f), d.y * s * cos(f), -d.y * d.y * s * sin(f));
+        return vec3(d.x * a * cos(f), a * sin(f), d.y * a * cos(f));
+      }
+` + sh.vertexShader
+      .replace('#include <beginnormal_vertex>', `
+        vec4 wp0 = modelMatrix * vec4(position, 1.0);
+        float edge = 1.0 - smoothstep(420.0, 580.0, length(wp0.xz));
+        vec2 pp = wp0.xz + uFlow;
+        vec3 tan = vec3(1.0, 0.0, 0.0), bin = vec3(0.0, 0.0, 1.0), disp = vec3(0.0);
+        for (int i = 0; i < 5; i++) disp += gerstner(uWaves[i], pp, tan, bin);
+        disp *= edge; tan = mix(vec3(1.0, 0.0, 0.0), tan, edge); bin = mix(vec3(0.0, 0.0, 1.0), bin, edge);
+        vec3 objectNormal = normalize(cross(bin, tan));
+        vCrest = disp.y;
+        #ifdef USE_TANGENT
+          vec3 objectTangent = tan;
+        #endif`)
+      .replace('#include <begin_vertex>', `vec3 transformed = position + disp;`)
+      .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
+        vSeaW = (modelMatrix * vec4(transformed, 1.0)).xyz;`);
+    sh.fragmentShader = `uniform float uFoam, uSail, uTime; uniform vec2 uFlow; varying vec3 vSeaW; varying float vCrest;
+      float sh12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+      float svn(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f*f*(3.0-2.0*f); return mix(mix(sh12(i), sh12(i+vec2(1,0)), u.x), mix(sh12(i+vec2(0,1)), sh12(i+vec2(1,1)), u.x), u.y); }
+      float foamN(vec2 p){ return svn(p) * 0.6 + svn(p * 2.3 + 7.1) * 0.4; }
+` + sh.fragmentShader
+      .replace('#include <normal_fragment_maps>', `
+        #ifdef USE_NORMALMAP
+          vec2 ruv = (vSeaW.xz + uFlow) * 0.045 + vec2(uTime * 0.012, uTime * 0.007);
+          vec2 ruv2 = (vSeaW.xz + uFlow) * 0.11 - vec2(uTime * 0.02, -uTime * 0.013);
+          vec3 mapN = (texture2D(normalMap, ruv).xyz * 2.0 - 1.0) + (texture2D(normalMap, ruv2).xyz * 2.0 - 1.0);
+          mapN.xy *= normalScale; mapN = normalize(mapN);
+          normal = normalize(tbn * mapN);
+        #endif`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        // light scattering through the crests + whitecaps + wake
+        float crest = smoothstep(0.2, 1.6, vCrest);
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.06, 0.34, 0.36), crest * 0.55);
+        vec2 fp = vSeaW.xz + uFlow;
+        float fn = foamN(fp * 0.35 + uTime * 0.05);
+        float fn2 = foamN(fp * 1.7 - uTime * 0.08);
+        float caps = smoothstep(0.72, 1.0, crest * 0.75 + fn * 0.35 + fn2 * 0.2) * uFoam * 0.85;
+        // hull wake: V behind the stern (boat heads north, stern at z = +17) and bow spray
+        float wz = vSeaW.z - 16.0; float half_ = 4.2 + max(wz, 0.0) * 0.32;
+        float wake = uSail * step(0.0, wz) * smoothstep(half_, half_ * 0.55, abs(vSeaW.x)) * exp(-wz * 0.012) * smoothstep(0.35, 0.75, foamN(fp * 0.6 + vec2(0.0, uTime * 0.4)));
+        float hull = smoothstep(6.2, 4.7, length(vec2(vSeaW.x, vSeaW.z * 0.27))) * (0.3 + uSail * 0.6) * smoothstep(0.45, 0.85, foamN(fp * 1.3 + uTime * 0.6));
+        float foam = clamp(caps + wake + hull, 0.0, 1.0);
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.92, 0.95, 0.96), foam);`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = mix(roughnessFactor, 0.85, foam);`);
+  };
+  SEA.mat = mat;
+  const geo = new THREE.PlaneGeometry(1200, 1200, 300, 300); geo.rotateX(-Math.PI / 2);
+  // denser in the middle where the boat is: squash vertices toward the centre
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i) / 600, z = p.getZ(i) / 600; const r = Math.max(Math.abs(x), Math.abs(z)); const s = r > 0 ? Math.pow(r, 1.7) / r : 0; p.setX(i, x * s * 600); p.setZ(i, z * s * 600); }
+  geo.computeBoundingSphere();
+  const sea = new THREE.Mesh(geo, mat); sea.receiveShadow = true; sea.frustumCulled = false; scene.add(sea); SEA.mesh = sea;
+  // far water to the horizon (flat, same material) — a frame around the near patch
+  const far = new THREE.Group(); scene.add(far); SEA.far = far;
+  for (const [x, z, w, d] of [[0, -3300, 7200, 6000], [0, 3300, 7200, 6000], [-3300, 0, 6000, 1200], [3300, 0, 6000, 1200]]) {
+    const g = new THREE.PlaneGeometry(w, d); g.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(g, mat); m.position.set(x, -0.05, z); m.receiveShadow = false; far.add(m);
+  }
+}
+
+// ---- the coast of Tel Aviv–Jaffa on the eastern horizon
+function buildCoast() {
+  const R = mulberry32(8);
+  const g = new THREE.Group(); scene.add(g);
+  const mat = new THREE.MeshStandardMaterial({ color: 0xcfc7b8, roughness: 0.9 });
+  const glass = new THREE.MeshStandardMaterial({ color: 0x8aa0b0, roughness: 0.2, metalness: 0.6, emissive: 0xffc27a, emissiveIntensity: 0 });
+  const box = new THREE.BoxGeometry(1, 1, 1);
+  const N = 170;
+  const a = new THREE.InstancedMesh(box, mat, N), b = new THREE.InstancedMesh(box, glass, 40);
+  let bi = 0;
+  for (let i = 0; i < N; i++) {
+    const z = -1800 + R() * 3600, x = 2600 + R() * 500 + Math.abs(z) * 0.08;
+    const tower = R() < 0.18 && Math.abs(z) < 900;
+    const h = tower ? 90 + R() * 150 : 12 + R() * 35;
+    tmpM.compose(tmpV.set(x, h / 2, z), tmpQ.identity(), tmpS.set(20 + R() * 40, h, 20 + R() * 40));
+    if (tower && bi < 40) { b.setMatrixAt(bi++, tmpM); } else a.setMatrixAt(i, tmpM);
+  }
+  b.count = bi;
+  g.add(a, b); COAST.glass = glass;
+  // sandy beach + low ridge
+  const beach = new THREE.Mesh(new THREE.BoxGeometry(160, 6, 5000), new THREE.MeshStandardMaterial({ color: 0xd8c7a2, roughness: 1 })); beach.position.set(2520, 1, 0); g.add(beach);
+  const hills = new THREE.Mesh(new THREE.BoxGeometry(900, 40, 6000), new THREE.MeshStandardMaterial({ color: 0x9aa088, roughness: 1 })); hills.position.set(3500, 10, 0); g.add(hills);
+}
+const COAST = { glass: null };
+
+// ==== 05_fronds.js
+// ---------------------------------------------------------------- plants: palm fronds (also schach), olive, lemon, date palm, bougainvillea
+const SWAY = []; // {obj, amp, speed, phase, base}
+
+// Wind sway in the vertex shader for foliage materials
+function windify(mat, amp = 0.06, freq = 1.3, weight = 'max(position.y, 0.0) * 0.25') {
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = U.time; sh.uniforms.uWind = U.wind;
+    sh.vertexShader = 'uniform float uTime; uniform float uWind;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      vec4 wpW = modelMatrix * vec4(position, 1.0);
+      #ifdef USE_INSTANCING
+        wpW = modelMatrix * instanceMatrix * vec4(position, 1.0);
+      #endif
+      float sw = sin(uTime * ${freq.toFixed(2)} + wpW.x * 0.6 + wpW.z * 0.4) + 0.5 * sin(uTime * ${(freq * 2.7).toFixed(2)} + wpW.x * 1.7);
+      float fl = sin(uTime * 7.0 + wpW.x * 9.0 + wpW.y * 7.0) * 0.25;
+      transformed.x += (sw + fl) * ${amp.toFixed(3)} * uWind * (${weight});
+      transformed.z += (sw * 0.6 - fl) * ${amp.toFixed(3)} * uWind * (${weight});`);
+  };
+  return mat;
+}
+
+// A date-palm frond: arched rachis with V-folded leaflets. Returns merged geometry with vertex colours.
+// Frond lies along +x, base at origin, leaflets fan in +/-z.
+function makeFrondGeometry(len, seed, { dry = 0, droop = 0.35, spread = 0.55, leafW = 1, leafLen = 1 } = {}) {
+  const R = mulberry32(seed);
+  const pos = [], nor = [], col = [], idx = [];
+  const base = new THREE.Color().setHSL(0.2 - dry * 0.08, 0.42 - dry * 0.1, 0.24 + dry * 0.16);
+  const tip = new THREE.Color().setHSL(0.18 - dry * 0.07, 0.35, 0.34 + dry * 0.14);
+  const rach = new THREE.Color().setHSL(0.13, 0.35, 0.42 + dry * 0.1);
+  const pt = (t) => { // rachis curve
+    const x = t * len, y = Math.sin(t * Math.PI * 0.5) * len * 0.08 - t * t * len * droop;
+    return new THREE.Vector3(x, y, Math.sin(t * 5 + seed) * 0.02 * len);
+  };
+  const tan = (t) => pt(Math.min(1, t + 0.01)).sub(pt(Math.max(0, t - 0.01))).normalize();
+  let vi = 0;
+  const addQuad = (a, b, c, d, n, ca, cb) => {
+    for (const [p, cc] of [[a, ca], [b, ca], [c, cb], [d, cb]]) { pos.push(p.x, p.y, p.z); nor.push(n.x, n.y, n.z); col.push(cc.r, cc.g, cc.b); }
+    idx.push(vi, vi + 1, vi + 2, vi, vi + 2, vi + 3); vi += 4;
+  };
+  // rachis: flat tapered strip (two faces) — seen mostly from below/above
+  const steps = 18;
+  for (let i = 0; i < steps; i++) {
+    const t0 = i / steps, t1 = (i + 1) / steps;
+    const w0 = lerp(0.035, 0.006, t0) * len / 2.5, w1 = lerp(0.035, 0.006, t1) * len / 2.5;
+    const p0 = pt(t0), p1 = pt(t1);
+    const up = new THREE.Vector3(0, 1, 0);
+    addQuad(p0.clone().add(new THREE.Vector3(0, 0, -w0)), p0.clone().add(new THREE.Vector3(0, 0, w0)), p1.clone().add(new THREE.Vector3(0, 0, w1)), p1.clone().add(new THREE.Vector3(0, 0, -w1)), up, rach, rach);
+    const side = new THREE.Vector3(0, 0, 1);
+    addQuad(p0.clone().add(new THREE.Vector3(0, -w0, 0)), p0.clone().add(new THREE.Vector3(0, w0 * 0.3, 0)), p1.clone().add(new THREE.Vector3(0, w1 * 0.3, 0)), p1.clone().add(new THREE.Vector3(0, -w1, 0)), side, rach, rach);
+  }
+  // leaflets
+  const n = Math.floor(52 + R() * 14);
+  for (let i = 0; i < n; i++) {
+    const t = 0.12 + (i / n) * 0.86;
+    const p = pt(t), tg = tan(t);
+    const L = len * (0.22 + 0.2 * Math.sin(Math.min(1, t * 1.25) * Math.PI)) * (0.85 + R() * 0.3) * (t > 0.92 ? 0.6 : 1) * leafLen;
+    const W = 0.022 * len / 2.5 * (0.8 + R() * 0.4) * leafW;
+    for (const s of [-1, 1]) {
+      // leaflet direction: out to the side, swept toward the tip, raised into a V
+      const ang = spread + R() * 0.2;
+      const dir = new THREE.Vector3(tg.x * Math.cos(ang), 0.35 + R() * 0.25 - t * 0.2, s * Math.sin(ang)).normalize();
+      const mid = new THREE.Vector3(0, 1, 0).cross(dir).normalize().multiplyScalar(s);
+      const segs = 3;
+      let prevA = null, prevB = null;
+      const cA = new THREE.Color().copy(base).lerp(tip, t).offsetHSL((R() - 0.5) * 0.02, 0, (R() - 0.5) * 0.05);
+      if (R() < 0.08 + dry * 0.3) cA.lerp(new THREE.Color(0.55, 0.45, 0.22), 0.6); // browned leaflet
+      for (let k = 0; k <= segs; k++) {
+        const f = k / segs;
+        const c = p.clone().addScaledVector(dir, L * f);
+        c.y -= f * f * L * 0.35; // leaflets droop at the ends
+        const w = W * Math.sin(Math.max(0.15, f) * Math.PI) * (1 - f * 0.4);
+        // V fold: two edges raised along the midrib
+        const a = c.clone().addScaledVector(mid, w).add(new THREE.Vector3(0, w * 0.6, 0));
+        const b = c.clone().addScaledVector(mid, -w).add(new THREE.Vector3(0, w * 0.6, 0));
+        if (prevA) {
+          const nn = new THREE.Vector3().subVectors(a, prevA).cross(new THREE.Vector3().subVectors(b, a)).normalize();
+          if (!(nn.lengthSq() > 1e-10)) nn.set(0, 1, 0);
+          if (nn.y < 0) nn.negate();
+          const c2 = cA.clone().multiplyScalar(0.85 + f * 0.2);
+          addQuad(prevA, prevB, b, a, nn, cA, c2);
+        }
+        prevA = a; prevB = b;
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx);
+  return g;
+}
+let FROND_MAT;
+function frondMaterial() {
+  if (!FROND_MAT) FROND_MAT = windify(new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.78, metalness: 0 }), 0.05, 1.1, 'length(position) * 0.12');
+  return FROND_MAT;
+}
+
+// ---- trunks
+
+// ==== 06_boat.js
+// ---------------------------------------------------------------- the boat: a small car ferry (bow = -z, heading north)
+const BOAT = {
+  root: new THREE.Group(), deckY: 2.1, len: 34, beam: 9.2,
+  pitch: 0, roll: 0, heave: 0, navLights: [], deckLights: [], flag: null, awning: null, upper: null,
+};
+const HULL_W = (z) => { // half-beam along the hull
+  const L = 17; if (z < -L) return 0;
+  if (z < -9) { const t = (z + L) / 8; return BOAT.beam / 2 * Math.sin(t * Math.PI / 2) ** 0.8; }
+  return BOAT.beam / 2 * (z > 15 ? 0.97 : 1);
+};
+function buildHull() {
+  // lofted hull: sections along z, each from deck edge down to the keel
+  const secs = 40, ring = [[1, 2.2], [1.0, 1.2], [0.97, 0.2], [0.85, -0.5], [0.55, -1.0], [0.0, -1.2]];
+  const pos = [], col = [], idx = [];
+  const white = new THREE.Color(0xf1f1ec), navy = new THREE.Color(0x1d3a5c), red = new THREE.Color(0x8e2a24), stripe = new THREE.Color(0xd8a13a);
+  const cols = ring.length * 2 - 1; // mirrored
+  for (let s = 0; s <= secs; s++) {
+    const z = -17 + (s / secs) * 34;
+    const hw = Math.max(0.02, HULL_W(z));
+    const bowLift = z < -10 ? (z + 10) * -0.06 : 0; // sheer rises at the bow
+    const pts = [];
+    for (let i = 0; i < ring.length; i++) pts.push([ring[i][0] * hw, ring[i][1] + (i === 0 ? bowLift : 0)]);
+    const full = [...pts.map(([x, y]) => [x, y]), ...pts.slice(0, -1).reverse().map(([x, y]) => [-x, y])];
+    for (const [x, y] of full) {
+      pos.push(x, y, z);
+      const c = y > 1.05 ? white : y > 0.9 ? stripe : y > 0.05 ? navy : red;
+      col.push(c.r, c.g, c.b);
+    }
+  }
+  for (let s = 0; s < secs; s++) for (let i = 0; i < cols - 1; i++) {
+    const a = s * cols + i, b = a + 1, c = a + cols, d = c + 1;
+    idx.push(a, c, b, b, c, d);
+  }
+  // stern transom
+  const base = pos.length / 3; const zS = 17;
+  for (let i = 0; i < cols; i++) { pos.push(pos[(secs * cols + i) * 3], pos[(secs * cols + i) * 3 + 1], zS); col.push(0.12, 0.23, 0.36); }
+  pos.push(0, 1.0, zS); col.push(0.12, 0.23, 0.36);
+  for (let i = 0; i < cols - 1; i++) idx.push(base + i, base + i + 1, base + cols);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx); g.computeVertexNormals();
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.2, side: THREE.DoubleSide }));
+  m.castShadow = true; m.receiveShadow = true; BOAT.root.add(m);
+  // name on the bow
+  const name = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.5), new THREE.MeshBasicMaterial({ transparent: true, map: paintTex(512, 80, (c) => { c.fillStyle = '#1d3a5c'; c.font = '700 54px "Frank Ruhl Libre", serif'; c.textAlign = 'center'; c.fillText('רבי עקיבא · RABBI AKIVA', 256, 58); }) }));
+  for (const s of [-1, 1]) { const n = name.clone(); n.position.set(s * (HULL_W(-8) + 0.02), 1.65, -8); n.rotation.y = s > 0 ? Math.PI / 2 : -Math.PI / 2; BOAT.root.add(n); }
+}
+function deckTexture() {
+  return genPBR(512, 512, (u, v) => {
+    // diamond anti-slip steel plate
+    const X = u * 48, Y = v * 48; const cx = Math.floor(X), cy = Math.floor(Y); const fx = X - cx - 0.5, fy = Y - cy - 0.5;
+    const dia = (cx + cy) & 1 ? Math.abs(fx * 0.4 + fy) : Math.abs(fx * 0.4 - fy);
+    const bump = smooth(0.12, 0.03, dia) * smooth(0.45, 0.3, Math.abs(fx));
+    const rust = smooth(0.35, 0.7, fbm(noiseA, u * 6, v * 6, 4)) * 0.25;
+    const plate = (Math.abs(((u * 4) % 1) - 0.5) > 0.495 || Math.abs(((v * 2) % 1) - 0.5) > 0.497) ? -0.3 : 0;
+    const c = 0.42 + bump * 0.08 + plate * 0.2;
+    return { h: bump * 0.6 + plate, r: c + rust * 0.25, g: c + rust * 0.08, b: c * 1.03 - rust * 0.05, ro: 0.55 + rust * 0.4 - bump * 0.1 };
+  }, 3.0);
+}
+function buildBoat() {
+  scene.add(BOAT.root);
+  buildHull();
+  const D = BOAT.deckY;
+  // deck
+  const dset = deckTexture(); for (const k of ['map', 'normalMap', 'roughnessMap']) dset[k].repeat.set(2, 7);
+  const deckMat = new THREE.MeshStandardMaterial({ ...dset, metalness: 0.25, color: 0x9ea79c });
+  const shape = new THREE.Shape(); const hw0 = (z) => HULL_W(z) - 0.05;
+  shape.moveTo(0, 16.6); for (let z = -16; z <= 17; z += 1) shape.lineTo(hw0(z), -z); for (let z = 17; z >= -16; z -= 1) shape.lineTo(-hw0(z), -z);
+  const dg = new THREE.ShapeGeometry(shape); dg.rotateX(-Math.PI / 2);
+  const uv = dg.attributes.uv, dp = dg.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, dp.getX(i) / 9.2, dp.getZ(i) / 34);
+  const deck = new THREE.Mesh(dg, deckMat); deck.position.y = D; deck.receiveShadow = true; BOAT.root.add(deck);
+  // yellow safety lines + parking bay lines
+  const yl = new THREE.MeshStandardMaterial({ color: 0xe8b61c, roughness: 0.7 });
+  for (const x of [-3.9, 3.9]) addMesh(new THREE.BoxGeometry(0.1, 0.005, 24), yl, x, D + 0.003, 3, BOAT.root, false);
+  for (const z of [-3.6, 7.2]) addMesh(new THREE.BoxGeometry(3.2, 0.005, 0.1), yl, 0, D + 0.003, z, BOAT.root, false);
+  // bulwark + railing
+  const steel = new THREE.MeshStandardMaterial({ color: 0xe9ebe8, roughness: 0.5, metalness: 0.3 });
+  const railM = new THREE.MeshStandardMaterial({ color: 0xd9dcd9, roughness: 0.35, metalness: 0.7 });
+  for (const s of [-1, 1]) {
+    for (let z = -12; z <= 16.5; z += 1.5) {
+      addMesh(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 6), railM, s * (hw0(z) - 0.05), D + 0.5, z, BOAT.root);
+    }
+    for (const y of [0.5, 1.0]) {
+      const pts = []; for (let z = -12; z <= 16.5; z += 0.5) pts.push(new THREE.Vector3(s * (hw0(z) - 0.05), D + y, z));
+      BOAT.root.add(shadowed(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, 0.022, 6), railM)));
+    }
+    // lifebuoys
+    for (const z of [-4, 10]) { const lb = addMesh(new THREE.TorusGeometry(0.33, 0.08, 10, 24), new THREE.MeshStandardMaterial({ color: 0xf06a1e, roughness: 0.6 }), s * (hw0(z) - 0.12), D + 0.8, z, BOAT.root); lb.rotation.y = Math.PI / 2; }
+  }
+  // bow ramp (landing-craft style ferry) raised
+  const ramp = new THREE.Group(); ramp.position.set(0, D, -12.5); ramp.rotation.x = -1.35; BOAT.root.add(ramp);
+  addMesh(new THREE.BoxGeometry(6.4, 4.6, 0.18), steel, 0, 2.3, 0, ramp);
+  for (let k = 0; k < 8; k++) addMesh(new THREE.BoxGeometry(6.2, 0.06, 0.1), steel, 0, 0.4 + k * 0.55, 0.12, ramp);
+  // bollards
+  for (const [x, z] of [[-3.8, -11], [3.8, -11], [-4, 15.5], [4, 15.5]]) addMesh(new THREE.CylinderGeometry(0.14, 0.16, 0.45, 12), MAT_BLACK(), x, D + 0.22, z, BOAT.root);
+  // wheelhouse at the stern, with an upper deck overhang reaching forward
+  const wh = new THREE.Group(); wh.position.set(0, D, 13); BOAT.root.add(wh);
+  const glassM = new THREE.MeshStandardMaterial({ color: 0x0e1b24, roughness: 0.05, metalness: 0.9, emissive: 0xffd6a0, emissiveIntensity: 0 });
+  BOAT.cabinGlass = glassM;
+  buildCabin(wh, steel, railM);
+  const upper = new THREE.Group(); wh.add(upper); BOAT.upper = upper;
+  addMesh(new THREE.BoxGeometry(8.8, 0.22, 9.2), steel, 0, 2.72, -0.8, upper); // upper deck extends forward over the car bay
+  for (const x of [-3.6, 3.6]) addMesh(new THREE.CylinderGeometry(0.08, 0.08, 2.6, 10), steel, x, 1.3, -5.1, upper);
+  // railings round the upper deck (open at the top of the stairs)
+  const uRail = (pts) => upper.add(shadowed(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0), pts.length * 8, 0.025, 6), railM)));
+  for (const y of [3.3, 3.85]) uRail([new THREE.Vector3(3.8, y, -5.4), new THREE.Vector3(-4.35, y, -5.4), new THREE.Vector3(-4.35, y, 3.75), new THREE.Vector3(4.35, y, 3.75), new THREE.Vector3(4.35, y, -4.9)]);
+  for (const [x, z] of [[3.8, -5.4], [0, -5.4], [-4.35, -5.4], [-4.35, -1], [-4.35, 3.75], [4.35, 3.75], [4.35, -1], [4.35, -4.9]]) addMesh(new THREE.CylinderGeometry(0.025, 0.025, 1.05, 6), railM, x, 3.35, z, upper);
+  // outside stairs up to the upper deck, starboard side
+  const stairs = new THREE.Group(); wh.add(stairs);
+  for (let i = 0; i < 14; i++) addMesh(new THREE.BoxGeometry(0.55, 0.05, 0.3), steel, 4.125, (i + 1) * 0.2 - 0.025, -9.1 + i * 0.264 + 0.13, stairs);
+  for (const x of [3.86, 4.39]) { const st = addMesh(new THREE.BoxGeometry(0.03, 0.2, 4.4), steel, x, 1.4, -7.25, stairs); st.rotation.x = -Math.atan2(2.8, 3.7); }
+  { const hr = addMesh(new THREE.CylinderGeometry(0.02, 0.02, 4.7, 6), railM, 4.42, 2.25, -7.25, stairs); hr.rotation.x = Math.PI / 2 - Math.atan2(2.8, 3.7); }
+  addMesh(new THREE.BoxGeometry(4.6, 2.2, 3.2), steel, 0, 3.93, 1.8, upper); // bridge
+  addMesh(new THREE.BoxGeometry(4.4, 0.8, 0.05), glassM, 0, 4.3, 0.18, upper, false);
+  // mast + radar + masthead light
+  addMesh(new THREE.CylinderGeometry(0.07, 0.09, 4, 8), steel, 0, 7, 2.3, upper);
+  const radar = addMesh(new THREE.BoxGeometry(2.2, 0.12, 0.25), MAT_BLACK(), 0, 7.4, 2.3, upper); BOAT.radar = radar;
+  // flagstaff at the stern: Israeli flag
+  addMesh(new THREE.CylinderGeometry(0.03, 0.03, 3.4, 6), railM, 0, D + 1.7, 16.7, BOAT.root);
+  const flagTex = paintTex(256, 180, (g) => {
+    g.fillStyle = '#fff'; g.fillRect(0, 0, 256, 180); g.fillStyle = '#0038b8'; g.fillRect(0, 20, 256, 26); g.fillRect(0, 134, 256, 26);
+    g.strokeStyle = '#0038b8'; g.lineWidth = 8; const cx = 128, cy = 90, r = 34;
+    for (const o of [0, Math.PI]) { g.beginPath(); for (let i = 0; i < 3; i++) { const a = o - Math.PI / 2 + i * TAU / 3; g[i ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * r, cy + Math.sin(a) * r); } g.closePath(); g.stroke(); }
+  });
+  const fg = new THREE.PlaneGeometry(1.4, 1.0, 16, 8); fg.translate(0.7, 0, 0);
+  const flag = new THREE.Mesh(fg, new THREE.MeshStandardMaterial({ map: flagTex, side: THREE.DoubleSide, roughness: 0.8 }));
+  flag.position.set(0.03, D + 2.9, 16.7); flag.rotation.y = -Math.PI / 2; flag.castShadow = true; BOAT.root.add(flag); BOAT.flag = flag; BOAT.flagBase = fg.attributes.position.array.slice();
+  // deck awning over the car bay (optional, toggled by CFG.overhead)
+  const aw = new THREE.Group(); BOAT.root.add(aw); BOAT.awning = aw;
+  const awM = new THREE.MeshStandardMaterial({ color: 0xe9e0c8, roughness: 0.9, side: THREE.DoubleSide });
+  const ag = new THREE.PlaneGeometry(6.4, 8.4, 20, 20); ag.rotateX(-Math.PI / 2);
+  const ap = ag.attributes.position; for (let i = 0; i < ap.count; i++) ap.setY(i, -Math.cos(ap.getX(i) / 6.4 * Math.PI) * 0.25 + 0.25);
+  ag.computeVertexNormals();
+  addMesh(ag, awM, 0, D + 4.2, 1.5, aw);
+  for (const [x, z] of [[-3.2, -2.6], [3.2, -2.6], [-3.2, 5.6], [3.2, 5.6]]) addMesh(new THREE.CylinderGeometry(0.04, 0.04, 4.2, 8), railM, x, D + 2.1, z, aw);
+  // navigation lights: port red, starboard green, masthead white, stern white
+  const nav = (col, x, y, z, parent) => { const m = addMesh(new THREE.SphereGeometry(0.09, 10, 8), new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0 }), x, y, z, parent, false); BOAT.navLights.push(m.material); };
+  nav(0xff2a1a, -2.35, 4.2, 0.2, upper); nav(0x1aff4a, 2.35, 4.2, 0.2, upper); nav(0xffffff, 0, 8.2, 2.3, upper); nav(0xffffff, 0, D + 3.5, 16.7, BOAT.root);
+  // deck floodlight (one real light at night)
+  const fl = new THREE.SpotLight(0xffe2b8, 0, 26, 0.7, 0.7, 1.3); fl.position.set(0, D + 4.9, 7.5); fl.target.position.set(0, D, 1.5); BOAT.root.add(fl, fl.target); BOAT.deckLights.push(fl);
+  // a second car parked behind for scale
+  const other = makeSedan(0x2f4f7a); other.position.set(0, D, -8.2); BOAT.root.add(other);
+  shadowed(BOAT.root);
+  deck.castShadow = false;
+}
+let _black;
+function MAT_BLACK() { return _black || (_black = new THREE.MeshStandardMaterial({ color: 0x1b1d1f, roughness: 0.6, metalness: 0.3 })); }
+
+// float the boat on the CPU sea
+function updateBoat(dt, t) {
+  const L = 13, W = 3.6;
+  const hb = seaHeight(0, -L, t), hs = seaHeight(0, L, t), hp = seaHeight(-W, 0, t), hsb = seaHeight(W, 0, t), hc = seaHeight(0, 0, t);
+  const heave = (hb + hs + hp + hsb + hc * 2) / 6 * 0.95;
+  const pitch = Math.atan2(hb - hs, 2 * L) * 0.8;
+  const roll = Math.atan2(hp - hsb, 2 * W) * 0.55 + CFG.wind / 60 * 0.03; // a little heel from the wind
+  BOAT.heave = damp(BOAT.heave, heave, 3, dt); BOAT.pitch = damp(BOAT.pitch, pitch, 2.5, dt); BOAT.roll = damp(BOAT.roll, roll, 2.5, dt);
+  BOAT.root.position.y = BOAT.heave - 0.1;
+  BOAT.root.rotation.set(BOAT.pitch, 0, BOAT.roll);
+  // flag flutter
+  const f = BOAT.flag.geometry.attributes.position, b = BOAT.flagBase, w = 0.4 + CFG.wind / 30;
+  for (let i = 0; i < f.count; i++) { const x = b[i * 3]; f.setZ(i, Math.sin(x * 6 - t * (4 + w * 3)) * 0.08 * x * Math.min(1.5, w)); }
+  f.needsUpdate = true; BOAT.flag.geometry.computeVertexNormals();
+  BOAT.radar.rotation.y = t * 2;
+  const night = SKY.nightK;
+  for (const m of BOAT.navLights) m.emissiveIntensity = 0.3 + night * 5;
+  BOAT.cabinGlass.emissiveIntensity = night * 1.2; if (BOAT.cabinWindows) BOAT.cabinWindows.emissiveIntensity = night * 0.35;
+  for (const l of BOAT.deckLights) { l.intensity = night * 22; l.visible = night > 0.05; }
+  if (COAST.glass) COAST.glass.emissiveIntensity = night * 1.5;
+}
+
+// ---- the wheelhouse cabin you can walk into (local to the wheelhouse group at z = 13)
+function buildCabin(wh, steel, railM) {
+  const C = new THREE.Group(); wh.add(C); BOAT.cabin = C;
+  const Z0 = -1.4, Z1 = 4.0, X = 3.7, H = 2.6, t = 0.08, WB0 = 1.05, WB1 = 1.95;
+  const glass = new THREE.MeshStandardMaterial({ color: 0x9fc3d6, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.22, depthWrite: false, emissive: 0xffd6a0, emissiveIntensity: 0 });
+  BOAT.cabinWindows = glass;
+  const inner = new THREE.MeshStandardMaterial({ color: 0xe8e4da, roughness: 0.8 });
+  const wall = (w, h, d, x, y, z) => addMesh(new THREE.BoxGeometry(w, h, d), steel, x, y, z, C);
+  // front wall with a doorway (x -0.5..0.5) and a window band
+  for (const [a, b] of [[-X, -0.5], [0.5, X]]) { wall(b - a, WB0, t, (a + b) / 2, WB0 / 2, Z0); }
+  wall(2 * X, H - WB1, t, 0, (WB1 + H) / 2, Z0);
+  for (const x of [-X, -2.6, -1.5, -0.5, 0.5, 1.5, 2.6, X]) wall(0.08, WB1 - WB0, t, x, (WB0 + WB1) / 2, Z0);
+  for (const [a, b] of [[-X, -2.6], [-2.6, -1.5], [-1.5, -0.5], [0.5, 1.5], [1.5, 2.6], [2.6, X]]) addMesh(new THREE.PlaneGeometry(b - a - 0.08, WB1 - WB0), glass, (a + b) / 2, (WB0 + WB1) / 2, Z0, C, false, false);
+  // door leaf swung open against the outside of the front wall
+  const doorM = new THREE.MeshStandardMaterial({ color: 0xdcdcd4, roughness: 0.5, metalness: 0.3 });
+  addMesh(new THREE.BoxGeometry(0.95, 1.9, 0.05), doorM, -1.0, 0.97, Z0 - 0.07, C);
+  addMesh(new THREE.CylinderGeometry(0.1, 0.1, 0.02, 16), glass, -1.0, 1.45, Z0 - 0.1, C, false).rotation.x = Math.PI / 2;
+  // back wall and side walls with windows
+  wall(2 * X, H, t, 0, H / 2, Z1);
+  for (const s of [-1, 1]) {
+    wall(t, WB0, Z1 - Z0, s * X, WB0 / 2, (Z0 + Z1) / 2); wall(t, H - WB1, Z1 - Z0, s * X, (WB1 + H) / 2, (Z0 + Z1) / 2);
+    for (const z of [Z0, 0.4, 2.2, Z1]) wall(t, WB1 - WB0, 0.08, s * X, (WB0 + WB1) / 2, z);
+    for (const [a, b] of [[Z0, 0.4], [0.4, 2.2], [2.2, Z1]]) { const g = addMesh(new THREE.PlaneGeometry(b - a - 0.08, WB1 - WB0), glass, s * X, (WB0 + WB1) / 2, (a + b) / 2, C, false, false); g.rotation.y = Math.PI / 2; }
+  }
+  // inner lining + wooden floor + ceiling light
+  for (const s of [-1, 1]) addMesh(new THREE.PlaneGeometry(Z1 - Z0, WB0 - 0.02), inner, s * (X - 0.045), WB0 / 2, (Z0 + Z1) / 2, C, false).rotation.y = -s * Math.PI / 2;
+  addMesh(new THREE.PlaneGeometry(2 * X - 0.1, H - 0.02), inner, 0, H / 2, Z1 - 0.045, C, false).rotation.y = Math.PI;
+  const floorTex = TEX.wood.map.clone(); floorTex.needsUpdate = true; floorTex.repeat.set(10, 2); floorTex.rotation = Math.PI / 2;
+  addMesh(new THREE.BoxGeometry(2 * X - 0.1, 0.04, Z1 - Z0 - 0.1), new THREE.MeshStandardMaterial({ map: floorTex, color: 0xc49a6c, roughness: 0.6 }), 0, 0.02, (Z0 + Z1) / 2, C);
+  addMesh(new THREE.BoxGeometry(1.4, 0.03, 0.5), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff1d8, emissiveIntensity: 1.2 }), 0, H - 0.03, 1.3, C, false);
+  // --- helm: console, screens, ship's wheel, throttles, captain's chair
+  const dark = new THREE.MeshStandardMaterial({ color: 0x2b3036, roughness: 0.5, metalness: 0.4 });
+  addMesh(new THREE.BoxGeometry(2.6, 1.0, 0.5), dark, 2.1, 0.5, Z0 + 0.3, C);
+  const scr = (draw, x) => { const m = addMesh(new THREE.PlaneGeometry(0.55, 0.38), new THREE.MeshStandardMaterial({ map: paintTex(256, 176, draw), emissive: 0xffffff, emissiveMap: null, emissiveIntensity: 0.9, roughness: 0.3 }), x, 1.08, Z0 + 0.22, C, false); m.material.emissiveMap = m.material.map; m.rotation.x = -0.7; };
+  scr((g) => { g.fillStyle = '#021a0c'; g.fillRect(0, 0, 256, 176); g.strokeStyle = '#1fe07a'; g.lineWidth = 2; for (let r = 20; r < 90; r += 22) { g.beginPath(); g.arc(128, 88, r, 0, TAU); g.stroke(); } g.beginPath(); g.moveTo(128, 88); g.lineTo(200, 40); g.stroke(); g.fillStyle = '#6fff9e'; for (let i = 0; i < 9; i++) g.fillRect(40 + (i * 57) % 180, 30 + (i * 37) % 120, 4, 4); }, 1.35);
+  scr((g) => { g.fillStyle = '#0b2a4a'; g.fillRect(0, 0, 256, 176); g.fillStyle = '#d9c28c'; g.beginPath(); g.moveTo(190, 0); g.lineTo(256, 0); g.lineTo(256, 176); g.lineTo(215, 176); g.bezierCurveTo(205, 120, 200, 60, 190, 0); g.fill(); g.fillStyle = '#fff'; g.font = '700 14px Assistant'; g.fillText('TEL AVIV–YAFO', 110, 90); g.fillStyle = '#ff4a3a'; g.beginPath(); g.arc(120, 120, 5, 0, TAU); g.fill(); g.fillStyle = '#9fd0ff'; g.font = '12px Assistant'; g.fillText('SOG 6.2 kn  HDG 000°', 12, 165); }, 2.0);
+  scr((g) => { g.fillStyle = '#111'; g.fillRect(0, 0, 256, 176); g.fillStyle = '#ffb347'; g.font = '700 34px Assistant'; g.fillText('1,450 rpm', 30, 70); g.fillStyle = '#7fd08a'; g.font = '20px Assistant'; g.fillText('ENGINE OK   FUEL 72%', 22, 120); }, 2.65);
+  const wheel = new THREE.Group(); wheel.position.set(2.0, 1.15, Z0 + 0.62); C.add(wheel); BOAT.helm = wheel;
+  const woodM = new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.45 });
+  wheel.add(new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.025, 8, 32), woodM));
+  for (let k = 0; k < 8; k++) { const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.78, 6), woodM); sp.rotation.z = k * Math.PI / 8; wheel.add(sp); }
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.1, 12), new THREE.MeshStandardMaterial({ color: 0xc9a24a, metalness: 1, roughness: 0.3 })); hub.rotation.x = Math.PI / 2; wheel.add(hub);
+  addMesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 8), dark, 2.0, 1.15, Z0 + 0.52, C).rotation.x = Math.PI / 2;
+  for (const x of [3.0, 3.12]) { const lev = addMesh(new THREE.CylinderGeometry(0.012, 0.012, 0.25, 6), railM, x, 1.1, Z0 + 0.35, C); lev.rotation.x = -0.4; addMesh(new THREE.SphereGeometry(0.03, 8, 6), new THREE.MeshStandardMaterial({ color: 0xc8231c }), x, 1.22, Z0 + 0.4, C); }
+  const seatM = new THREE.MeshStandardMaterial({ color: 0x23324a, roughness: 0.7 });
+  addMesh(new THREE.CylinderGeometry(0.05, 0.2, 0.5, 12), dark, 2.0, 0.25, 0.1 + 0.3, C);
+  addMesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), seatM, 2.0, 0.55, 0.4, C);
+  addMesh(new THREE.BoxGeometry(0.5, 0.6, 0.08), seatM, 2.0, 0.9, 0.66, C);
+  // --- galley counter with a kettle, port side front
+  addMesh(new THREE.BoxGeometry(2.0, 0.9, 0.5), new THREE.MeshStandardMaterial({ color: 0xd8d2c4, roughness: 0.6 }), -2.6, 0.45, Z0 + 0.3, C);
+  addMesh(new THREE.CylinderGeometry(0.08, 0.1, 0.2, 14), railM, -2.2, 1.0, Z0 + 0.3, C);
+  // --- bench, table, life-jacket locker, fire extinguisher
+  addMesh(new THREE.BoxGeometry(3.0, 0.4, 0.5), steel, -1.9, 0.2, Z1 - 0.3, C);
+  addMesh(new THREE.BoxGeometry(3.0, 0.08, 0.5), new THREE.MeshStandardMaterial({ color: 0x2d5f8a, roughness: 0.9 }), -1.9, 0.44, Z1 - 0.3, C);
+  addMesh(new THREE.BoxGeometry(1.0, 0.04, 0.55), woodM, -1.9, 0.75, Z1 - 1.05, C);
+  addMesh(new THREE.CylinderGeometry(0.04, 0.04, 0.73, 8), railM, -1.9, 0.37, Z1 - 1.05, C);
+  const lock = addMesh(new THREE.BoxGeometry(0.6, 1.2, 0.5), new THREE.MeshStandardMaterial({ color: 0xf06a1e, roughness: 0.6 }), 3.3, 0.6, Z1 - 0.3, C);
+  const lbl = addMesh(new THREE.PlaneGeometry(0.5, 0.25), new THREE.MeshStandardMaterial({ map: paintTex(256, 128, (g) => { g.fillStyle = '#f06a1e'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#fff'; g.font = '700 30px Assistant'; g.textAlign = 'center'; g.fillText('חגורות הצלה', 128, 52); g.font = '700 24px Assistant'; g.fillText('LIFE JACKETS', 128, 96); }) }), 3.3, 0.9, Z1 - 0.56, C, false); lbl.rotation.y = Math.PI;
+  addMesh(new THREE.CylinderGeometry(0.07, 0.07, 0.45, 12), new THREE.MeshStandardMaterial({ color: 0xc8231c, roughness: 0.4 }), -X + 0.15, 0.3, 0.3, C);
+  // a picture of Jerusalem on the wall
+  const pic = addMesh(new THREE.PlaneGeometry(0.9, 0.45), new THREE.MeshStandardMaterial({ map: TEX.panels[0], roughness: 0.6 }), -X + 0.06, 1.55, 2.0, C, false); pic.rotation.y = Math.PI / 2;
+  shadowed(C); C.traverse((o) => { if (o.material === glass) { o.castShadow = false; o.receiveShadow = false; } });
+}
+
+// ==== 07_vehicles.js
+// ---------------------------------------------------------------- vehicles: double-cab pickup ("sukkah-mobile") and a sedan with a roof rack
+function paintMat(color) { return new THREE.MeshPhysicalMaterial({ color, roughness: 0.32, metalness: 0.55, clearcoat: 1, clearcoatRoughness: 0.08 }); }
+const CARGLASS = new THREE.MeshStandardMaterial({ color: 0x10181e, roughness: 0.04, metalness: 0.9 });
+const TYRE = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.85 });
+const RIM = new THREE.MeshStandardMaterial({ color: 0xc8ccd0, roughness: 0.25, metalness: 0.95 });
+const TRIM = new THREE.MeshStandardMaterial({ color: 0x1c1d1f, roughness: 0.55 });
+const CHROME = new THREE.MeshStandardMaterial({ color: 0xe8ecef, roughness: 0.12, metalness: 1 });
+function plateTex(txt) {
+  return paintTex(256, 56, (g) => { g.fillStyle = '#f2c81b'; g.fillRect(0, 0, 256, 56); g.strokeStyle = '#111'; g.lineWidth = 4; g.strokeRect(2, 2, 252, 52); g.fillStyle = '#1b3fa0'; g.fillRect(4, 4, 30, 48); g.fillStyle = '#fff'; g.font = '700 13px Assistant'; g.fillText('IL', 10, 46); g.fillStyle = '#111'; g.font = '700 38px Assistant, sans-serif'; g.textAlign = 'center'; g.fillText(txt, 145, 43); });
+}
+function rbox(w, h, d, r, mat, x, y, z, parent) { const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, r), mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; }
+function wheel(parent, x, y, z, r = 0.38) {
+  const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
+  const tyre = new THREE.Mesh(new THREE.TorusGeometry(r * 0.72, r * 0.3, 12, 28), TYRE); tyre.rotation.y = Math.PI / 2; tyre.scale.set(1, 1, 1.25); g.add(tyre);
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.56, r * 0.56, 0.2, 20), RIM); rim.rotation.z = Math.PI / 2; g.add(rim);
+  for (let k = 0; k < 6; k++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.03, r * 0.95, 0.06), RIM); sp.rotation.x = k * Math.PI / 6; sp.position.x = Math.sign(x) * 0.11; g.add(sp); }
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.24, 12), CHROME); hub.rotation.z = Math.PI / 2; g.add(hub);
+  shadowed(g); return g;
+}
+function lamps(parent, zFront, zBack, yF, yB, xs) {
+  const head = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff2d8, emissiveIntensity: 0.2, roughness: 0.1, metalness: 0.5 });
+  const tail = new THREE.MeshStandardMaterial({ color: 0x8a0d0d, emissive: 0xff1a1a, emissiveIntensity: 0.3, roughness: 0.2 });
+  for (const s of [-1, 1]) { addMesh(new THREE.BoxGeometry(0.34, 0.12, 0.06), head, s * xs, yF, zFront, parent, false); addMesh(new THREE.BoxGeometry(0.1, 0.3, 0.06), tail, s * (xs + 0.08), yB, zBack, parent, false); }
+  return { head, tail };
+}
+
+function makePickup(color = 0xf2f2ef) {
+  const G = new THREE.Group(); const paint = paintMat(color);
+  // chassis + bumpers
+  rbox(1.72, 0.25, 5.1, 0.06, TRIM, 0, 0.5, 0, G);
+  rbox(1.86, 0.2, 0.2, 0.06, CHROME, 0, 0.55, -2.62, G); rbox(1.86, 0.18, 0.18, 0.05, CHROME, 0, 0.62, 2.62, G);
+  // hood + front
+  rbox(1.84, 0.55, 1.45, 0.12, paint, 0, 0.88, -1.95, G);
+  rbox(1.2, 0.26, 0.05, 0.03, TRIM, 0, 0.9, -2.68, G); // grille
+  // cab
+  rbox(1.84, 0.62, 2.0, 0.12, paint, 0, 0.93, -0.3, G);
+  rbox(1.72, 0.66, 1.75, 0.16, paint, 0, 1.52, -0.18, G);
+  // glass: windshield (raked), side windows, rear window
+  const ws = addMesh(new THREE.PlaneGeometry(1.52, 0.72), CARGLASS, 0, 1.5, -1.14, G, false); ws.rotation.x = -0.58;
+  for (const s of [-1, 1]) { const sw = addMesh(new THREE.PlaneGeometry(1.5, 0.46), CARGLASS, s * 0.865, 1.55, -0.2, G, false); sw.rotation.y = s * Math.PI / 2; }
+  addMesh(new THREE.PlaneGeometry(1.4, 0.4), CARGLASS, 0, 1.55, 0.7, G, false);
+  // pillars
+  for (const s of [-1, 1]) { addMesh(new THREE.BoxGeometry(0.06, 0.52, 0.08), paint, s * 0.83, 1.55, -0.2, G); }
+  // mirrors, handles
+  for (const s of [-1, 1]) { rbox(0.22, 0.14, 0.08, 0.03, TRIM, s * 1.0, 1.28, -0.98, G); addMesh(new THREE.BoxGeometry(0.02, 0.03, 0.14), TRIM, s * 0.925, 1.1, -0.55, G); addMesh(new THREE.BoxGeometry(0.02, 0.03, 0.14), TRIM, s * 0.925, 1.1, 0.25, G); addMesh(new THREE.BoxGeometry(0.005, 0.6, 0.01), TRIM, s * 0.923, 0.95, -0.1, G); }
+  // bed: floor + sides + tailgate
+  const BZ0 = 0.75, BZ1 = 2.6, BY = 0.82;
+  rbox(1.84, 0.1, BZ1 - BZ0, 0.02, paint, 0, BY - 0.05, (BZ0 + BZ1) / 2, G);
+  const bedLiner = new THREE.MeshStandardMaterial({ color: 0x232426, roughness: 0.9 });
+  const liner = addMesh(new THREE.BoxGeometry(1.52, 0.02, BZ1 - BZ0 - 0.1), bedLiner, 0, BY + 0.01, (BZ0 + BZ1) / 2, G);
+  for (const s of [-1, 1]) rbox(0.14, 0.5, BZ1 - BZ0, 0.04, paint, s * 0.85, BY + 0.24, (BZ0 + BZ1) / 2, G);
+  rbox(1.84, 0.5, 0.1, 0.03, paint, 0, BY + 0.24, BZ0 + 0.05, G); rbox(1.84, 0.06, 0.5, 0.02, paint, 0, BY - 0.02, BZ1 + 0.22, G); // tailgate folded down
+  for (const s of [-1, 1]) { const ch = addMesh(new THREE.CylinderGeometry(0.006, 0.006, 0.55, 4), CHROME, s * 0.86, BY + 0.2, BZ1 + 0.2, G); ch.rotation.x = 1.0; }
+  // plastic step stool behind the truck
+  const stool = new THREE.MeshStandardMaterial({ color: 0x2f77c8, roughness: 0.5 });
+  rbox(0.5, 0.06, 0.36, 0.02, stool, 0, 0.39, BZ1 + 0.85, G);
+  for (const [x, z] of [[-0.2, -0.13], [0.2, -0.13], [-0.2, 0.13], [0.2, 0.13]]) addMesh(new THREE.BoxGeometry(0.05, 0.37, 0.05), stool, x, 0.18, BZ1 + 0.85 + z, G);
+  // wheel arches + wheels
+  for (const s of [-1, 1]) for (const z of [-1.75, 1.6]) { const arch = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.06, 6, 16, Math.PI), TRIM); arch.position.set(s * 0.93, 0.62, z); arch.rotation.y = Math.PI / 2; G.add(arch); wheel(G, s * 0.8, 0.38, z); }
+  lamps(G, -2.66, 2.63, 0.98, 1.0, 0.62);
+  // plates
+  const pm = new THREE.MeshStandardMaterial({ map: plateTex('71-532-80'), roughness: 0.4 });
+  addMesh(new THREE.PlaneGeometry(0.52, 0.11), pm, 0, 0.62, 2.73, G, false);
+  const fp = addMesh(new THREE.PlaneGeometry(0.52, 0.11), pm, 0, 0.55, -2.73, G, false); fp.rotation.y = Math.PI;
+  // tie-down hooks in the bed corners
+  for (const s of [-1, 1]) for (const z of [BZ0 + 0.15, BZ1 - 0.15]) addMesh(new THREE.TorusGeometry(0.03, 0.008, 6, 10), CHROME, s * 0.74, BY + 0.06, z, G);
+  G.userData = { mount: new THREE.Vector3(0, BY + 0.02, (BZ0 + BZ1) / 2), foot: [1.52, 1.75], hooks: [[-0.74, BY + 0.06, BZ0 + 0.15], [0.74, BY + 0.06, BZ0 + 0.15], [-0.74, BY + 0.06, BZ1 - 0.15], [0.74, BY + 0.06, BZ1 - 0.15]], kind: 'pickup' };
+  return G;
+}
+
+function makeSedan(color = 0xb9bec4) {
+  const G = new THREE.Group(); const paint = paintMat(color);
+  rbox(1.76, 0.5, 4.5, 0.18, paint, 0, 0.62, 0, G);
+  rbox(1.6, 0.5, 2.2, 0.22, paint, 0, 1.1, 0.05, G);
+  const ws = addMesh(new THREE.PlaneGeometry(1.4, 0.56), CARGLASS, 0, 1.12, -1.05, G, false); ws.rotation.x = -0.9;
+  const rw = addMesh(new THREE.PlaneGeometry(1.36, 0.5), CARGLASS, 0, 1.1, 1.18, G, false); rw.rotation.x = Math.PI + 0.9;
+  for (const s of [-1, 1]) { const sw = addMesh(new THREE.PlaneGeometry(1.9, 0.34), CARGLASS, s * 0.805, 1.14, 0.05, G, false); sw.rotation.y = s * Math.PI / 2; }
+  for (const s of [-1, 1]) for (const z of [-1.4, 1.35]) wheel(G, s * 0.78, 0.33, z, 0.33);
+  lamps(G, -2.24, 2.24, 0.72, 0.8, 0.6);
+  const pm = new THREE.MeshStandardMaterial({ map: plateTex('38-117-64'), roughness: 0.4 });
+  addMesh(new THREE.PlaneGeometry(0.52, 0.11), pm, 0, 0.55, 2.26, G, false);
+  // roof rack rails + crossbars
+  for (const s of [-1, 1]) addMesh(new THREE.BoxGeometry(0.04, 0.05, 1.7), TRIM, s * 0.66, 1.4, 0.05, G);
+  for (const z of [-0.6, 0.7]) addMesh(new THREE.BoxGeometry(1.45, 0.04, 0.05), TRIM, 0, 1.43, z, G);
+  for (const s of [-1, 1]) rbox(0.2, 0.12, 0.08, 0.03, TRIM, s * 0.95, 0.98, -0.85, G);
+  G.userData = { mount: new THREE.Vector3(0, 1.455, 0.05), foot: [1.3, 1.5], hooks: [[-0.66, 1.4, -0.7], [0.66, 1.4, -0.7], [-0.66, 1.4, 0.8], [0.66, 1.4, 0.8]], kind: 'sedan' };
+  shadowed(G);
+  return G;
+}
+
+// ==== 08_sukkah.js
+// ---------------------------------------------------------------- parametric sukkah (all sizes in cm in CFG, metres in 3D)
+const CFG = {
+  shiur: 'naeh', day: 'first', hour: 17.4, boat: 'anchored', wind: 16, rain: 0, seasick: false,
+  vehicle: 'pickup', strapped: true, driving: false,
+  w: 150, d: 175, h: 190, wallH: 185, wallGap: 4,
+  walls: '4', wallType: 'canvas', tied: true,
+  schach: 'palm', amount: 70, avir: 0, supports: 'wood', overhead: 'none',
+  order: 'walls', old: false, renewed: false, permission: true, decor: true,
+};
+const SUK = { root: null, vehicle: null, vehicleKind: null, panels: [], lights: [], bulbMat: null, grid: null, GW: 128, GH: 128, shade: 0, avirMax: 0, pieces: 0, wobble: 0 };
+
+// ---- canvas / sheet walls with wind billow (edges tied or free hanging)
+function makeWallMaterial(tex, uScale, kind) {
+  const t = tex.clone(); t.needsUpdate = true; t.repeat.set(uScale, 1);
+  const wv = TEX.weave.normalMap.clone(); wv.needsUpdate = true; wv.repeat.set(uScale * 50, 25);
+  const m = new THREE.MeshStandardMaterial({ map: t, normalMap: wv, normalScale: new THREE.Vector2(0.45, 0.45), roughness: 0.93, side: THREE.DoubleSide });
+  m.userData.amp = { value: 0 }; m.userData.tied = { value: 1 }; m.userData.seed = { value: rand() * 10 };
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = U.time; sh.uniforms.uAmp = m.userData.amp; sh.uniforms.uTied = m.userData.tied; sh.uniforms.uSeed = m.userData.seed;
+    sh.vertexShader = 'uniform float uTime, uAmp, uTied, uSeed;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      float hang = 1.0 - uv.y;
+      float prof = mix(sin(uv.x * 3.14159) * (0.2 + 0.8 * hang), sin(uv.x * 3.14159) * sin(uv.y * 3.14159), uTied);
+      float ph = uTime * (1.4 + uAmp * 0.8) + uSeed;
+      float wave = sin(ph + uv.x * 4.0) * 0.6 + sin(ph * 2.3 + uv.x * 11.0 + uv.y * 5.0) * 0.3 + sin(ph * 0.5 + uSeed) * 0.6;
+      transformed.z += prof * wave * uAmp + sin(uv.x * 70.0) * 0.004 * (1.0 - uTied * 0.6);
+      transformed.y += (1.0 - uTied) * hang * abs(wave) * uAmp * 0.25;`);
+  };
+  return m;
+}
+function sheetTex() {
+  return paintTex(512, 256, (g, W, H) => {
+    g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 90; i++) { const x = (i * 97) % W, y = (i * 53) % H; g.fillStyle = ['#e7a3b6', '#a9c7e8', '#f2d27a'][i % 3]; for (let k = 0; k < 5; k++) { g.beginPath(); g.ellipse(x + Math.cos(k * 1.26) * 6, y + Math.sin(k * 1.26) * 6, 5, 3, k * 1.26, 0, TAU); g.fill(); } g.fillStyle = '#e9c24a'; g.beginPath(); g.arc(x, y, 3, 0, TAU); g.fill(); }
+  });
+}
+function plyTex() { return TEX.wood.map; }
+
+const M = {};
+function sukkahMaterials() {
+  M.wood = new THREE.MeshStandardMaterial({ ...TEX.wood, roughness: 1 });
+  M.alu = new THREE.MeshStandardMaterial({ color: 0xc9ced2, metalness: 0.9, roughness: 0.35 });
+  M.bamboo = new THREE.MeshStandardMaterial({ color: 0xc4ad6c, roughness: 0.55 });
+  M.bambooDark = new THREE.MeshStandardMaterial({ color: 0xa88f52, roughness: 0.6 });
+  M.board = new THREE.MeshStandardMaterial({ ...TEX.wood, roughness: 0.95, color: 0xe6d2b0 });
+  M.tarp = new THREE.MeshStandardMaterial({ color: 0x2d62b8, roughness: 0.6, side: THREE.DoubleSide });
+  M.metal = new THREE.MeshStandardMaterial({ color: 0xa4aaae, metalness: 0.85, roughness: 0.4, side: THREE.DoubleSide });
+  M.cob = new THREE.MeshStandardMaterial({ color: 0xe8c23a, roughness: 0.6 });
+  M.husk = new THREE.MeshStandardMaterial({ color: 0x9fb45a, roughness: 0.8, side: THREE.DoubleSide });
+  M.strap = new THREE.MeshStandardMaterial({ color: 0xf0b21a, roughness: 0.7 });
+  M.ply = new THREE.MeshStandardMaterial({ ...TEX.wood, roughness: 0.9, color: 0xf0dcc0 });
+  M.pine = windify(new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.8, color: 0x7a9a6a }), 0.03, 1.2, 'length(position) * 0.1');
+  M.sheetTex = sheetTex();
+  M.chain = new THREE.MeshStandardMaterial({ roughness: 0.85, side: THREE.DoubleSide });
+  M.pom = new THREE.MeshStandardMaterial({ color: 0xa6231e, roughness: 0.45 });
+  M.bulb = new THREE.MeshStandardMaterial({ color: 0xfff3dc, emissive: 0xffa84a, emissiveIntensity: 0.1, roughness: 0.2 });
+  M.white = new THREE.MeshStandardMaterial({ color: 0xf2f0ea, roughness: 0.42 });
+}
+
+// place / replace the vehicle on the deck
+function placeVehicle() {
+  if (SUK.vehicleKind !== CFG.vehicle) {
+    if (SUK.vehicle) BOAT.root.remove(SUK.vehicle);
+    SUK.vehicle = CFG.vehicle === 'pickup' ? makePickup() : CFG.vehicle === 'sedan' ? makeSedan(0xe8e6e0) : new THREE.Group();
+    if (CFG.vehicle === 'deck') SUK.vehicle.userData = { mount: new THREE.Vector3(0, 0.005, 0), foot: [4, 4], hooks: [[-1.6, 0.05, -1.6], [1.6, 0.05, -1.6], [-1.6, 0.05, 1.6], [1.6, 0.05, 1.6]], kind: 'deck' };
+    BOAT.root.add(SUK.vehicle); SUK.vehicleKind = CFG.vehicle;
+  }
+  const z = CFG.overhead === 'upper' ? (CFG.vehicle === 'deck' ? 10.2 : 8.6) : 1.2;
+  SUK.vehicle.position.set(0, BOAT.deckY, z);
+  BOAT.awning.visible = CFG.overhead === 'awning';
+}
+
+const _inv = new THREE.Matrix4(), _mm = new THREE.Matrix4();
+function buildSukkah() {
+  placeVehicle();
+  if (SUK.root) { SUK.root.parent.remove(SUK.root); SUK.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.userData && o.material.userData.amp) o.material.dispose(); }); }
+  const R = new THREE.Group(); SUK.root = R; SUK.panels = []; SUK.lights = []; SUK.rects = []; SUK.triMeshes = [];
+  rand = mulberry32(77);
+  const mount = SUK.vehicle.userData.mount; R.position.copy(mount); SUK.vehicle.add(R);
+  const W = CFG.w / 100, D = CFG.d / 100, H = CFG.h / 100;
+  const post = CFG.supports === 'metal' ? M.alu : M.wood;
+  const ps = 0.045;
+  // --- frame
+  const corners = [[-W / 2, -D / 2], [W / 2, -D / 2], [-W / 2, D / 2], [W / 2, D / 2]];
+  for (const [x, z] of corners) addMesh(CFG.supports === 'metal' ? new THREE.CylinderGeometry(0.022, 0.022, H + 0.04, 10) : new THREE.BoxGeometry(ps, H + 0.04, ps), post, x, (H + 0.04) / 2, z, R);
+  for (const z of [-D / 2, D / 2]) addMesh(new THREE.BoxGeometry(W + ps, 0.07, ps), post, 0, H - 0.035, z, R);
+  for (const x of [-W / 2, W / 2]) addMesh(new THREE.BoxGeometry(ps, 0.07, D + ps), post, x, H - 0.035, 0, R);
+  // schach supports (ma'amid) across the width
+  const nSup = Math.max(2, Math.round(D / 0.45));
+  for (let i = 0; i <= nSup; i++) {
+    const z = -D / 2 + (i / nSup) * D;
+    const m = CFG.supports === 'metal' ? addMesh(new THREE.CylinderGeometry(0.014, 0.014, W + 0.1, 8), M.alu, 0, H + 0.014, z, R) : addMesh(new THREE.BoxGeometry(W + 0.1, 0.03, 0.04), M.wood, 0, H + 0.015, z, R);
+    if (CFG.supports === 'metal') m.rotation.z = Math.PI / 2;
+  }
+  // --- tie-down straps from the top corners to the vehicle's hooks
+  if (CFG.strapped) {
+    const hooks = SUK.vehicle.userData.hooks;
+    corners.forEach(([x, z], i) => {
+      const hk = hooks[i]; const a = new THREE.Vector3(x, H - 0.05, z), b = new THREE.Vector3(hk[0] - mount.x, hk[1] - mount.y, hk[2] - mount.z);
+      if (CFG.vehicle === 'deck') b.set(x * 1.6, 0.02, z * 1.6);
+      const len = a.distanceTo(b); const s = addMesh(new THREE.BoxGeometry(0.035, len, 0.004), M.strap, 0, 0, 0, R, false);
+      s.position.copy(a).add(b).multiplyScalar(0.5); s.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+      const rat = addMesh(new THREE.BoxGeometry(0.06, 0.1, 0.04), M.alu, 0, 0, 0, R); rat.position.copy(a).lerp(b, 0.7);
+    });
+  }
+  // --- walls
+  const y0 = CFG.wallGap / 100, wh = Math.max(0.05, Math.min(CFG.wallH / 100, H - y0));
+  const tefach = tefachM();
+  const sides = { front: [0, -D / 2, W, 0], back: [0, D / 2, W, Math.PI], left: [-W / 2, 0, D, Math.PI / 2], right: [W / 2, 0, D, -Math.PI / 2] };
+  const list = CFG.walls === '4' ? ['front', 'left', 'right', 'back'] : CFG.walls === '3' ? ['front', 'left', 'right'] : ['front', 'left'];
+  const addWall = (name, x, z, len, ry, off = 0) => {
+    let mesh;
+    if (CFG.wallType === 'wood') {
+      mesh = addMesh(new THREE.BoxGeometry(len, wh, 0.018), M.ply, 0, 0, 0, R);
+      mesh.position.set(x + Math.cos(ry) * off, y0 + wh / 2, z - Math.sin(ry) * off); mesh.rotation.y = ry;
+    } else {
+      const tex = CFG.wallType === 'sheet' ? M.sheetTex : TEX.panels[{ front: 0, left: 2, right: 1, back: 3 }[name] ?? 3];
+      const g = new THREE.PlaneGeometry(len, wh, 30, 14); g.translate(0, -wh / 2, 0);
+      const mat = makeWallMaterial(tex, CFG.wallType === 'sheet' ? len / 1.2 : len / 4, CFG.wallType);
+      mesh = new THREE.Mesh(g, mat); mesh.castShadow = true; mesh.receiveShadow = true;
+      mesh.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
+      mesh.position.set(x + Math.cos(ry) * off, y0 + wh, z - Math.sin(ry) * off); mesh.rotation.y = ry; R.add(mesh);
+      SUK.panels.push(mesh);
+    }
+    return mesh;
+  };
+  for (const name of list) {
+    const [x, z, len, ry] = sides[name];
+    const inset = 0.03;
+    const px = x + (name === 'left' ? -inset : name === 'right' ? inset : 0), pz = z + (name === 'front' ? -inset : name === 'back' ? inset : 0);
+    if (name === 'back' && W > 1.0) {
+      // doorway in the back wall
+      const door = Math.min(0.65, W * 0.45), seg = (W - door) / 2;
+      addWall(name, -W / 2 + seg / 2, pz, seg, ry); addWall(name, W / 2 - seg / 2, pz, seg, ry);
+    } else addWall(name, px, pz, len, ry);
+  }
+  if (CFG.walls === '2t') {
+    // a wall of just over a tefach on the third side, plus the tzurat hapetach (post + lintel) along it
+    const tw = tefach * 1.05;
+    addWall('right', W / 2 + 0.03, -D / 2 + tw / 2, tw, -Math.PI / 2);
+  }
+  // --- schach
+  buildSchach(R, W, D, H);
+  // --- decorations: string lights, paper chain, pomegranates
+  if (CFG.decor && W >= 0.8 && D >= 0.8) buildDecor(R, W, D, H);
+  // --- a small table and chairs, if there's room
+  if (W >= 1.15 && D >= 1.4 && H >= 1.3) buildFurniture(R, W, D);
+  shadowed(R);
+  for (const p of SUK.panels) { p.castShadow = true; }
+  measureShade(R, W, D);
+  updateWallMotion(0, true);
+  rebuildWalkColliders();
+}
+
+function tefachM() { return (CFG.shiur === 'naeh' ? 8 : 9.6) / 100; }
+
+function buildSchach(R, W, D, H) {
+  const S = new THREE.Group(); R.add(S);
+  const y = H + 0.035;
+  const amt = CFG.amount / 100;
+  const avir = CFG.avir / 100;
+  const inAvir = (z, half) => avir > 0 && Math.abs(z) - half < avir / 2;
+  const rect = (x0, x1, z0, z1) => SUK.rects.push([x0, x1, z0, z1]);
+  const T = CFG.schach;
+  const spread = (spacing) => { const n = Math.max(0, Math.round((D / spacing) * amt)); const out = []; for (let i = 0; i < n; i++) out.push(-D / 2 + (i + 0.5) * D / n); return out; };
+  if (T === 'palm' || T === 'branches') {
+    const zs = spread(T === 'palm' ? 0.2 : 0.16);
+    zs.forEach((z, i) => {
+      if (inAvir(z, 0.12)) return;
+      const len = W + 0.45;
+      const geo = T === 'palm' ? makeFrondGeometry(len, 300 + i * 7, { dry: 0.15 + rand() * 0.2, droop: 0.02, spread: 1.0, leafW: 1.1, leafLen: 0.42 * Math.min(1.6, 1.8 / len + 0.4) })
+        : makeFrondGeometry(len, 500 + i * 5, { dry: 0.0, droop: 0.05, spread: 0.75, leafW: 0.45, leafLen: 0.22 });
+      if (T === 'branches') { const c = geo.attributes.color; for (let k = 0; k < c.count; k++) c.setXYZ(k, c.getX(k) * 0.55, c.getY(k) * 0.8, c.getZ(k) * 0.55); }
+      fixNormals(geo);
+      const m = new THREE.Mesh(geo, T === 'palm' ? frondMaterial() : M.pine);
+      const h = new THREE.Group(); h.position.set(i & 1 ? W / 2 + 0.2 : -W / 2 - 0.2, y + (i % 3) * 0.018, z); h.rotation.y = (i & 1 ? Math.PI : 0) + (rand() - 0.5) * 0.1; h.add(m); S.add(h);
+      SUK.triMeshes.push(m);
+    });
+  } else if (T === 'bamboo') {
+    spread(0.034).forEach((z) => { if (inAvir(z, 0.016)) return; const m = addMesh(new THREE.CylinderGeometry(0.016, 0.017, W + 0.25, 8), rand() < 0.5 ? M.bamboo : M.bambooDark, 0, y + 0.017, z, S); m.rotation.z = Math.PI / 2; rect(-W / 2, W / 2, z - 0.016, z + 0.016); });
+  } else if (T === 'mats') {
+    // bamboo-slat mats made for schach: slats 1.2cm with ~0.4cm gaps
+    const matW = 0.9; const nMats = Math.ceil((D * amt) / matW);
+    const slats = [];
+    for (let k = 0; k < nMats; k++) { const z0 = -D / 2 + k * matW; for (let z = z0; z < Math.min(D / 2, z0 + matW); z += 0.016) if (!inAvir(z, 0.006)) slats.push(z); }
+    const im = new THREE.InstancedMesh(new THREE.BoxGeometry(W + 0.1, 0.006, 0.012), M.bamboo, Math.max(1, slats.length));
+    slats.forEach((z, i) => { tmpM.makeTranslation(0, y + 0.004, z); im.setMatrixAt(i, tmpM); rect(-W / 2, W / 2, z - 0.006, z + 0.006); });
+    im.count = slats.length; S.add(im);
+    for (let k = 0; k < nMats; k++) for (const x of [-W / 3, 0, W / 3]) { const z0 = -D / 2 + k * matW; const t = addMesh(new THREE.BoxGeometry(0.004, 0.009, Math.min(matW, D / 2 - z0)), M.bambooDark, x, y + 0.008, z0 + Math.min(matW, D / 2 - z0) / 2, S); }
+  } else if (T === 'boards' || T === 'wideboards') {
+    const bw = T === 'boards' ? 0.08 : 0.4;
+    spread(T === 'boards' ? 0.11 : 0.45).forEach((z) => { if (inAvir(z, bw / 2)) return; addMesh(new THREE.BoxGeometry(W + 0.2, 0.02, bw - 0.004), M.board, 0, y + 0.01, z, S); rect(-W / 2, W / 2, z - bw / 2, z + bw / 2); });
+  } else if (T === 'tarp') {
+    const cover = D * amt; const z0 = -D / 2, z1 = -D / 2 + cover;
+    const g = new THREE.PlaneGeometry(W + 0.3, cover + 0.05, 20, 10); g.rotateX(-Math.PI / 2);
+    const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setY(i, Math.sin(p.getX(i) * 7) * 0.01 + Math.cos(p.getZ(i) * 5) * 0.012);
+    g.computeVertexNormals(); const t = addMesh(g, M.tarp, 0, y + 0.02, (z0 + z1) / 2, S); rect(-W / 2, W / 2, z0, z1);
+  } else if (T === 'metal') {
+    const cover = D * amt; const g = new THREE.PlaneGeometry(W + 0.2, cover, 60, 1); g.rotateX(-Math.PI / 2);
+    const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setY(i, Math.sin(p.getX(i) * 50) * 0.012);
+    g.computeVertexNormals(); addMesh(g, M.metal, 0, y + 0.015, -D / 2 + cover / 2, S); rect(-W / 2, W / 2, -D / 2, -D / 2 + cover);
+  } else if (T === 'corn') {
+    spread(0.075).forEach((z, i) => {
+      if (inAvir(z, 0.03)) return;
+      for (let x = -W / 2 + 0.12; x < W / 2; x += 0.24) { const c = addMesh(new THREE.CapsuleGeometry(0.025, 0.14, 4, 8), M.cob, x + (rand() - 0.5) * 0.05, y + 0.03, z + (rand() - 0.5) * 0.03, S); c.rotation.z = Math.PI / 2; c.rotation.y = (rand() - 0.5) * 0.4; }
+      const leaf = addMesh(new THREE.PlaneGeometry(W + 0.2, 0.05), M.husk, 0, y + 0.012, z, S); leaf.rotation.x = -Math.PI / 2; rect(-W / 2, W / 2, z - 0.03, z + 0.03);
+    });
+  }
+  SUK.schachGroup = S;
+}
+
+function buildDecor(R, W, D, H) {
+  const h = H - 0.08;
+  // string lights around the inside perimeter
+  const pts = [];
+  const c = [[-W / 2 + 0.05, -D / 2 + 0.05], [W / 2 - 0.05, -D / 2 + 0.05], [W / 2 - 0.05, D / 2 - 0.05], [-W / 2 + 0.05, D / 2 - 0.05]];
+  for (let s = 0; s < 4; s++) { const a = c[s], b = c[(s + 1) % 4]; const len = Math.hypot(b[0] - a[0], b[1] - a[1]); const n = Math.max(2, Math.round(len / 0.22)); for (let i = 0; i < n; i++) { const t = i / n; pts.push(new THREE.Vector3(lerp(a[0], b[0], t), h - Math.sin(t * Math.PI) * 0.08, lerp(a[1], b[1], t))); } }
+  const im = new THREE.InstancedMesh(new THREE.SphereGeometry(0.02, 8, 6), M.bulb, pts.length);
+  pts.forEach((p, i) => { tmpM.makeTranslation(p.x, p.y, p.z); im.setMatrixAt(i, tmpM); }); R.add(im); SUK.bulbs = im;
+  const light = new THREE.PointLight(0xffb468, 0, 6, 1.6); light.position.set(0, h - 0.25, 0); light.visible = false; R.add(light); SUK.lights.push(light);
+  // paper chain across the diagonal
+  const a = new THREE.Vector3(-W / 2 + 0.06, h, -D / 2 + 0.06), b = new THREE.Vector3(W / 2 - 0.06, h, D / 2 - 0.06);
+  const curve = new THREE.QuadraticBezierCurve3(a, a.clone().lerp(b, 0.5).add(new THREE.Vector3(0, -0.25, 0)), b);
+  const L = curve.getLength(), n = Math.floor(L / 0.045);
+  const chain = new THREE.InstancedMesh(new THREE.TorusGeometry(0.025, 0.004, 4, 10), M.chain, n);
+  const cols = [0xd9463a, 0xf0b52f, 0x3f8f4e, 0x2f67b2, 0xe07aa8];
+  for (let i = 0; i < n; i++) { const p = curve.getPointAt(i / n), t = curve.getTangentAt(i / n); tmpQ.setFromUnitVectors(new THREE.Vector3(0, 1, 0), t); if (i & 1) tmpQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)); tmpM.compose(p, tmpQ, tmpS.set(1, 1.6, 1)); chain.setMatrixAt(i, tmpM); chain.setColorAt(i, tmpC.setHex(cols[i % cols.length])); }
+  R.add(chain);
+  // hanging pomegranates
+  SUK.pendants = [];
+  for (const [fx, fz] of [[-0.25, -0.2], [0.25, 0.25], [0.05, -0.35]]) {
+    const piv = new THREE.Group(); piv.position.set(fx * W, H, fz * D); R.add(piv);
+    const len = 0.25 + rand() * 0.2; addMesh(new THREE.CylinderGeometry(0.002, 0.002, len, 3), MAT_BLACK(), 0, -len / 2, 0, piv, false);
+    addMesh(new THREE.SphereGeometry(0.045, 12, 10), M.pom, 0, -len - 0.04, 0, piv);
+    SUK.pendants.push({ piv, ph: rand() * 6 });
+  }
+}
+function buildFurniture(R, W, D) {
+  const t = new THREE.Group(); t.position.set(0, 0, 0.05); R.add(t);
+  const tw = Math.min(0.8, W - 0.45), td = Math.min(0.6, D - 0.9);
+  addMesh(new THREE.BoxGeometry(tw, 0.03, td), M.white, 0, 0.7, 0, t);
+  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) addMesh(new THREE.CylinderGeometry(0.012, 0.012, 0.7, 6), MAT_BLACK(), x * (tw / 2 - 0.05), 0.35, z * (td / 2 - 0.05), t);
+  // white tablecloth, two candlesticks, kiddush cup, challah under a cover
+  addMesh(new THREE.BoxGeometry(tw + 0.06, 0.005, td + 0.06), new THREE.MeshStandardMaterial({ color: 0xf7f5ef, roughness: 0.9 }), 0, 0.718, 0, t);
+  const silver = new THREE.MeshStandardMaterial({ color: 0xe6e6e6, metalness: 1, roughness: 0.18 });
+  for (const s of [-1, 1]) { addMesh(new THREE.CylinderGeometry(0.012, 0.03, 0.2, 12), silver, s * 0.08, 0.82, -td / 2 + 0.1, t); addMesh(new THREE.CylinderGeometry(0.01, 0.01, 0.1, 8), M.white, s * 0.08, 0.97, -td / 2 + 0.1, t); }
+  addMesh(new THREE.CylinderGeometry(0.035, 0.015, 0.1, 16), silver, tw / 2 - 0.12, 0.77, 0.05, t);
+  addMesh(new THREE.BoxGeometry(0.3, 0.08, 0.2), new THREE.MeshStandardMaterial({ color: 0x1f3552, roughness: 0.8 }), 0, 0.76, 0.04, t);
+  // monobloc chairs on the long sides
+  for (const s of [-1, 1]) {
+    if (D < 1.6) continue;
+    const c = new THREE.Group(); c.position.set(0, 0, s * (td / 2 + 0.28)); c.rotation.y = s > 0 ? 0 : Math.PI; R.add(c);
+    addMesh(new THREE.BoxGeometry(0.42, 0.035, 0.4), M.white, 0, 0.44, 0, c);
+    for (const [x, z] of [[-0.18, -0.17], [0.18, -0.17], [-0.18, 0.17], [0.18, 0.17]]) addMesh(new THREE.BoxGeometry(0.04, 0.44, 0.05), M.white, x, 0.22, z, c);
+    const bk = addMesh(new THREE.BoxGeometry(0.42, 0.42, 0.03), M.white, 0, 0.68, 0.2, c); bk.rotation.x = -0.18;
+  }
+}
+
+// ---- measure the real shade and the widest air gap by rasterising the schach seen from below
+function measureShade(R, W, D) {
+  const GW = SUK.GW, GH = SUK.GH; const grid = SUK.grid = new Uint8Array(GW * GH);
+  const cw = W / GW, ch = D / GH;
+  R.updateWorldMatrix(true, true);
+  _inv.copy(R.matrixWorld).invert();
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  for (const m of SUK.triMeshes) {
+    _mm.multiplyMatrices(_inv, m.matrixWorld);
+    const pos = m.geometry.attributes.position, idx = m.geometry.index.array;
+    for (let t = 0; t < idx.length; t += 3) {
+      a.fromBufferAttribute(pos, idx[t]).applyMatrix4(_mm); b.fromBufferAttribute(pos, idx[t + 1]).applyMatrix4(_mm); c.fromBufferAttribute(pos, idx[t + 2]).applyMatrix4(_mm);
+      const ax = (a.x + W / 2) / cw, az = (a.z + D / 2) / ch, bx = (b.x + W / 2) / cw, bz = (b.z + D / 2) / ch, cx = (c.x + W / 2) / cw, cz = (c.z + D / 2) / ch;
+      const minX = Math.max(0, Math.floor(Math.min(ax, bx, cx))), maxX = Math.min(GW - 1, Math.ceil(Math.max(ax, bx, cx)));
+      const minZ = Math.max(0, Math.floor(Math.min(az, bz, cz))), maxZ = Math.min(GH - 1, Math.ceil(Math.max(az, bz, cz)));
+      const area = (bx - ax) * (cz - az) - (cx - ax) * (bz - az); if (Math.abs(area) < 1e-6) continue;
+      for (let z = minZ; z <= maxZ; z++) for (let x = minX; x <= maxX; x++) {
+        const px = x + 0.5, pz = z + 0.5;
+        const w0 = ((bx - px) * (cz - pz) - (cx - px) * (bz - pz)) / area, w1 = ((cx - px) * (az - pz) - (ax - px) * (cz - pz)) / area, w2 = 1 - w0 - w1;
+        if (w0 >= -0.04 && w1 >= -0.04 && w2 >= -0.04) grid[z * GW + x] = 1;
+      }
+    }
+  }
+  for (const [x0, x1, z0, z1] of SUK.rects) {
+    const gx0 = Math.max(0, Math.floor((x0 + W / 2) / cw)), gx1 = Math.min(GW - 1, Math.ceil((x1 + W / 2) / cw) - 1);
+    const gz0 = Math.max(0, Math.floor((z0 + D / 2) / ch + 0.5)), gz1 = Math.min(GH - 1, Math.ceil((z1 + D / 2) / ch - 0.5) - 1);
+    for (let z = gz0; z <= gz1; z++) for (let x = gx0; x <= gx1; x++) grid[z * GW + x] = 1;
+  }
+  let s = 0; for (let i = 0; i < grid.length; i++) s += grid[i];
+  SUK.shade = s / grid.length;
+  // widest band of open air running all the way across (rows) or along (columns)
+  let best = 0, run = 0;
+  for (let z = 0; z < GH; z++) { let empty = true; for (let x = 0; x < GW; x++) if (grid[z * GW + x]) { empty = false; break; } run = empty ? run + 1 : 0; best = Math.max(best, run * ch); }
+  run = 0; let bestC = 0;
+  for (let x = 0; x < GW; x++) { let empty = true; for (let z = 0; z < GH; z++) if (grid[z * GW + x]) { empty = false; break; } run = empty ? run + 1 : 0; bestC = Math.max(bestC, run * cw); }
+  SUK.avirRow = best * 100; SUK.avirCol = bestC * 100; SUK.avirMax = Math.max(SUK.avirRow, SUK.avirCol);
+  // split the roof at every air gap of 3 tefachim or more; the largest remaining part may still be a sukkah
+  const lim = tefachM() * 3; let seg = 0, bestSeg = 0, gap = 0;
+  for (let z = 0; z < GH; z++) {
+    let empty = true; for (let x = 0; x < GW; x++) if (grid[z * GW + x]) { empty = false; break; }
+    if (empty) { gap += ch; if (gap >= lim) { bestSeg = Math.max(bestSeg, seg); seg = 0; } }
+    else { if (gap < lim) seg += gap; gap = 0; seg += ch; }
+  }
+  SUK.bestSegment = Math.max(bestSeg, seg) * 100;
+}
+
+// wall motion follows the wind: loose canvas billows, tied canvas only trembles
+function updateWallMotion(dt, force) {
+  const wind = CFG.wind / 30 * (0.75 + 0.25 * Math.sin(U.time.value * 0.3));
+  const loose = CFG.tied ? 0 : 1;
+  for (const p of SUK.panels) {
+    const a = (CFG.wallType === 'sheet' ? 1.3 : 1) * (loose ? 0.12 : 0.012) * (0.25 + wind);
+    p.material.userData.amp.value = force ? a : damp(p.material.userData.amp.value, a, 2, dt);
+    p.material.userData.tied.value = CFG.tied ? 1 : 0;
+  }
+}
+
+// ==== 09_halacha.js
+// ---------------------------------------------------------------- halacha engine: every rule is evaluated live from CFG + the measured 3D sukkah
+// status: ok | warn (kosher bedieved / lechatchila issue / ask a rav) | fail (pasul / forbidden) | info
+const TF = () => (CFG.shiur === 'naeh' ? 8 : 9.6); // cm per tefach
+const toT = (cm) => cm / TF();
+const fT = (cm) => `${toT(cm).toFixed(1)} ${tt('tefachim', 'טפחים')}`;
+const SCHACH_NAMES = {
+  palm: ['palm fronds', 'כפות תמרים'], bamboo: ['bamboo poles', 'מקלות במבוק'], mats: ['bamboo mats made for schach', 'מחצלות שנעשו לסכך'], branches: ['evergreen branches', 'ענפי אורן'],
+  boards: ['narrow boards (8 cm)', 'נסרים צרים (8 ס״מ)'], wideboards: ['wide boards (40 cm)', 'נסרים רחבים (40 ס״מ)'], tarp: ['a plastic tarp', 'יריעת ניילון'], metal: ['corrugated metal sheets', 'פח גלי'], corn: ['corn on the cob (food)', 'קלחי תירס (אוכל)'],
+};
+
+function evaluateHalacha() {
+  const R = [];
+  // each text argument is either a string or [English, Hebrew]
+  const add = (grp, st, t, d, src) => R.push({ grp, st, t: tr(t), d: tr(d), src: tr(src) });
+  const T = TF(), amah = 6 * T;
+  const onCar = CFG.vehicle !== 'deck';
+  const yomTov = CFG.day === 'first';
+  const night = CFG.hour >= 18.9 || CFG.hour < 5.5;
+  const cm = tt('cm', 'ס״מ');
+
+  // ---------------- the structure
+  add('sukkah', 'info', [`Measuring by ${CFG.shiur === 'naeh' ? 'Rav Chaim Na’eh (1 tefach = 8 cm)' : 'Chazon Ish (1 tefach = 9.6 cm)'}`, `מודדים לפי ${CFG.shiur === 'naeh' ? 'ר׳ חיים נאה (טפח = 8 ס״מ)' : 'החזון איש (טפח = 9.6 ס״מ)'}`],
+    ['All sizes below are converted to tefachim using this shiur. Try switching it — a sukkah that is just big enough by one opinion can be too small by the other.', 'כל המידות כאן מחושבות בטפחים לפי השיעור הזה. נסו להחליף — סוכה שגדולה מספיק לשיטה אחת יכולה להיות קטנה מדי לשיטה השנייה.'],
+    ['Shiurei Torah (R’ Chaim Na’eh); Chazon Ish O.C. 39', 'שיעורי תורה (ר׳ חיים נאה); חזון איש או״ח לט']);
+  const small = Math.min(CFG.w, CFG.d);
+  add('sukkah', small >= 7 * T ? 'ok' : 'fail', ['Big enough: at least 7 × 7 tefachim', 'גדולה מספיק: לפחות 7 על 7 טפחים'],
+    [`Inside it measures ${CFG.w} × ${CFG.d} cm = ${toT(CFG.w).toFixed(1)} × ${toT(CFG.d).toFixed(1)} tefachim. It must hold “a person’s head, most of his body and his table” — 7 × 7 tefachim (${Math.round(7 * T)} cm).` + (small < 7 * T ? ' Too small: it is not a sukkah at all.' : ''),
+      `מבפנים היא ${CFG.w} על ${CFG.d} ס״מ = ${toT(CFG.w).toFixed(1)} על ${toT(CFG.d).toFixed(1)} טפחים. היא צריכה להכיל ״ראשו ורובו ושולחנו״ — 7 על 7 טפחים (${Math.round(7 * T)} ס״מ).` + (small < 7 * T ? ' קטנה מדי: זו בכלל לא סוכה.' : '')],
+    ['Sukkah 3a; Shulchan Aruch O.C. 634:1', 'סוכה ג ע״א; שו״ע או״ח תרלד:א']);
+  add('sukkah', CFG.h >= 10 * T ? 'ok' : 'fail', ['Tall enough: at least 10 tefachim', 'גבוהה מספיק: לפחות 10 טפחים'],
+    [`From the sukkah’s floor to the schach is ${CFG.h} cm = ${fT(CFG.h)} (minimum ${Math.round(10 * T)} cm).` + (CFG.h < 10 * T ? ' A sukkah lower than 10 tefachim is pasul.' : ''),
+      `מרצפת הסוכה עד הסכך ${CFG.h} ס״מ = ${fT(CFG.h)} (מינימום ${Math.round(10 * T)} ס״מ).` + (CFG.h < 10 * T ? ' סוכה שאינה גבוהה עשרה טפחים פסולה.' : '')],
+    ['Mishnah Sukkah 1:1; S.A. 633:8', 'משנה סוכה א:א; שו״ע תרלג:ח']);
+  const floor = onCar ? (CFG.vehicle === 'pickup' ? ['the truck bed', 'ארגז הטנדר'] : ['the car roof', 'גג המכונית']) : ['the deck', 'הסיפון'];
+  add('sukkah', CFG.h <= 20 * amah ? 'ok' : 'fail', ['Not higher than 20 amot', 'לא גבוהה מעשרים אמה'],
+    [`A sukkah over 20 amot (${(20 * amah / 100).toFixed(1)} m) is too tall — you sit in the shade of the walls, not the schach, and it stops being a temporary dwelling. Height is measured from the sukkah’s own floor (${floor[0]}), not from the sea.`,
+      `סוכה שגבוהה מעשרים אמה (${(20 * amah / 100).toFixed(1)} מ׳) פסולה — יושבים בצל הדפנות ולא בצל הסכך, והיא כבר לא דירת עראי. הגובה נמדד מרצפת הסוכה עצמה (${floor[1]}), לא מפני הים.`],
+    ['Mishnah Sukkah 1:1; S.A. 633:1', 'משנה סוכה א:א; שו״ע תרלג:א']);
+
+  // walls
+  const wl = { '4': ['Four walls', 'ארבע דפנות'], '3': ['Three walls', 'שלוש דפנות'], '2t': ['Two walls and a tefach', 'שתיים כהלכתן ושלישית טפח'], '2': ['Only two walls', 'רק שתי דפנות'] }[CFG.walls];
+  const wSrc = ['Sukkah 6b; S.A. 630:2', 'סוכה ו ע״ב; שו״ע תרל:ב'];
+  if (CFG.walls === '4') add('sukkah', 'ok', wl, ['Three full walls are the mitzvah at its best; a fourth wall (with a doorway) protects from the sea wind.', 'שלוש דפנות שלמות הן המצווה כתיקונה; דופן רביעית (עם פתח) שומרת מרוח הים.'], wSrc);
+  else if (CFG.walls === '3') add('sukkah', 'ok', wl, ['Three full walls: kosher, the mitzvah as it is meant to be.', 'שלוש דפנות שלמות: כשרה, המצווה כתיקונה.'], wSrc);
+  else if (CFG.walls === '2t') add('sukkah', 'warn', wl, [`Two adjacent full walls plus a third just over a tefach wide (${Math.round(T)} cm), with a tzurat hapetach (the post and the beam above it) — kosher by a halacha given to Moshe at Sinai. Better to have three full walls.`, `שתי דפנות סמוכות שלמות ושלישית ברוחב טפח ומשהו (${Math.round(T)} ס״מ), עם צורת הפתח (הקנה והקורה שמעליו) — כשרה בהלכה למשה מסיני. עדיף שלוש דפנות שלמות.`], ['Sukkah 6b; S.A. 630:2–3', 'סוכה ו ע״ב; שו״ע תרל:ב–ג']);
+  else add('sukkah', 'fail', wl, ['Two walls alone are not enough. You need at least two full walls and a third of more than a tefach.', 'שתי דפנות לבד אינן מספיקות. צריך לפחות שתיים כהלכתן ושלישית של יותר מטפח.'], ['S.A. 630:2', 'שו״ע תרל:ב']);
+  add('sukkah', CFG.wallH >= 10 * T ? 'ok' : 'fail', ['Walls at least 10 tefachim high', 'דפנות גבוהות לפחות עשרה טפחים'],
+    [`The walls are ${CFG.wallH} cm = ${fT(CFG.wallH)}. A wall of 10 tefachim counts even if it doesn’t reach the schach (gud asik).`, `הדפנות ${CFG.wallH} ס״מ = ${fT(CFG.wallH)}. דופן של עשרה טפחים כשרה גם אם אינה מגיעה לסכך (גוד אסיק).`], ['S.A. 630:9', 'שו״ע תרל:ט']);
+  add('sukkah', CFG.wallGap < 3 * T ? 'ok' : 'fail', ['Gap under the walls less than 3 tefachim', 'רווח מתחת לדפנות פחות משלושה טפחים'],
+    [`The walls start ${CFG.wallGap} cm (${fT(CFG.wallGap)}) above the floor. Under 3 tefachim (${Math.round(3 * T)} cm) the gap is “lavud” — considered closed. More, and a goat could pass under: it isn’t a wall.`, `הדפנות מתחילות ${CFG.wallGap} ס״מ (${fT(CFG.wallGap)}) מעל הרצפה. פחות משלושה טפחים (${Math.round(3 * T)} ס״מ) — ״לבוד״, כאילו סגור. יותר מזה גדיים בוקעים בו, וזו אינה דופן.`], ['Sukkah 16a; S.A. 630:9', 'סוכה טז ע״א; שו״ע תרל:ט']);
+  const w10 = ['S.A. 630:10 and Mishnah Berurah there', 'שו״ע תרל:י ומשנה ברורה שם'];
+  if (CFG.wallType === 'wood') add('sukkah', 'ok', ['Solid walls', 'דפנות קשיחות'], ['Plywood walls don’t move in the wind.', 'דפנות דיקט אינן זזות ברוח.'], ['S.A. 630:10', 'שו״ע תרל:י']);
+  else if (!CFG.tied) add('sukkah', 'fail', ['Walls flap in the wind', 'הדפנות מתנופפות ברוח'], [`Loose ${CFG.wallType === 'sheet' ? 'bedsheets' : 'canvas'} that moves back and forth in an ordinary wind is not a wall. On a ship at sea you can watch it happen.`, `${CFG.wallType === 'sheet' ? 'סדינים רפויים' : 'בד רפוי'} שזז הלוך ושוב ברוח מצויה אינו דופן. על ספינה בים אפשר לראות את זה קורה.`], w10);
+  else if (CFG.wallType === 'sheet') add('sukkah', 'warn', ['Bedsheet walls, tied down', 'דפנות סדינים, קשורות'], ['Tied tight they count, but sheets tend to come loose and people forget to check — better to use real walls, or run strings less than 3 tefachim apart as a backup.', 'כשהם קשורים היטב הם כשרים, אבל סדינים נוטים להשתחרר ושוכחים לבדוק — עדיף דפנות של ממש, או למתוח חוטים פחות משלושה טפחים זה מזה כגיבוי.'], w10);
+  else add('sukkah', 'ok', ['Canvas walls tied tight', 'דפנות בד קשורות היטב'], ['The canvas is tied on every side so it doesn’t swing in the wind. Many also add strings every 3 tefachim as a backup wall.', 'הבד קשור מכל הצדדים ואינו מתנדנד ברוח. רבים מוסיפים גם חוטים כל שלושה טפחים כדופן גיבוי.'], w10);
+
+  // on a car, on a ship
+  add('sukkah', 'ok', onCar ? ['A sukkah on a car on a ship', 'סוכה על מכונית על ספינה'] : ['A sukkah on a ship', 'סוכה על ספינה'],
+    ['The Mishnah rules that a sukkah on top of a wagon or on the deck of a ship is kosher, and you may go up into it on Yom Tov. A car is today’s wagon. Rabbi Akiva built his on a ship.', 'המשנה פוסקת: העושה סוכתו בראש העגלה או בראש הספינה — כשרה, ועולים לה ביום טוב. מכונית היא העגלה של היום. רבי עקיבא בנה את שלו על ספינה.'],
+    ['Mishnah Sukkah 2:3; Sukkah 23a; S.A. 628:2', 'משנה סוכה ב:ג; סוכה כג ע״א; שו״ע תרכח:ב']);
+  add('sukkah', CFG.strapped ? 'ok' : 'fail', ['It could stand in an ordinary wind on land', 'יכולה לעמוד ברוח מצויה של יבשה'],
+    CFG.strapped ? ['The frame is strapped down to the vehicle, so it would survive a normal land wind — the condition Rabban Gamliel and Rabbi Akiva agree on.', 'השלד קשור ברצועות לרכב, כך שהוא יעמוד ברוח רגילה של יבשה — התנאי שרבן גמליאל ורבי עקיבא מסכימים עליו.']
+      : ['The frame just sits there, not tied to anything. It couldn’t stand even in an ordinary wind on land — this is the sukkah Rabban Gamliel called pasul, and Rabbi Akiva’s blew away.', 'השלד פשוט מונח, לא קשור לכלום. הוא לא יעמוד אפילו ברוח מצויה של יבשה — זו הסוכה שרבן גמליאל פסל, ושל רבי עקיבא עפה ברוח.'],
+    ['Sukkah 23a; S.A. 628:2 and commentaries', 'סוכה כג ע״א; שו״ע תרכח:ב ונושאי כלים']);
+
+  // schach
+  const kind = CFG.schach, nm = SCHACH_NAMES[kind];
+  const s1 = ['Sukkah 11a; S.A. 629:1', 'סוכה יא ע״א; שו״ע תרכט:א'];
+  if (['tarp', 'metal'].includes(kind)) add('sukkah', 'fail', [`Schach of ${nm[0]}`, `סכך של ${nm[1]}`], ['Schach must grow from the ground, be cut off it, and not be able to become tamei. Plastic and metal never grew from the ground.', 'סכך צריך להיות גידולי קרקע, תלוש, ושאינו מקבל טומאה. ניילון ומתכת לא גדלו מן הקרקע.'], s1);
+  else if (kind === 'corn') add('sukkah', 'fail', [`Schach of ${nm[0]}`, `סכך של ${nm[1]}`], ['It grew from the ground — but food can become tamei (tumat ochalin), so it is pasul as schach.', 'זה גדל מן הקרקע — אבל אוכל מקבל טומאה (טומאת אוכלין), ולכן פסול לסכך.'], s1);
+  else if (kind === 'wideboards') add('sukkah', 'fail', ['Boards 4 tefachim wide', 'נסרים ברוחב ארבעה טפחים'], [`Boards 40 cm wide are over 4 tefachim (${Math.round(4 * T)} cm). The Sages forbade them so that a sukkah won’t look like a house with a ceiling (gezeirat tikrah).`, `נסרים ברוחב 40 ס״מ הם יותר מארבעה טפחים (${Math.round(4 * T)} ס״מ). חכמים פסלו אותם שלא תיראה הסוכה כבית עם תקרה (גזירת תקרה).`], ['Sukkah 14a; S.A. 629:18', 'סוכה יד ע״א; שו״ע תרכט:יח']);
+  else if (kind === 'boards') add('sukkah', 'warn', ['Narrow boards as schach', 'נסרים צרים לסכך'], ['Boards under 4 tefachim wide are kosher by law, but the Rema writes that the custom is not to use boards at all — lechatchila use branches, fronds or bamboo.', 'נסרים צרים מארבעה טפחים כשרים מעיקר הדין, אבל הרמ״א כותב שנוהגים שלא לסכך בנסרים כלל — לכתחילה ענפים, כפות או במבוק.'], ['S.A. 629:18 with Rema', 'שו״ע תרכט:יח ורמ״א']);
+  else if (kind === 'mats') add('sukkah', 'ok', ['Mats made for schach', 'מחצלות שנעשו לסכך'], ['Bamboo mats are kosher only if they were made to be schach, not for lying on. Buy them with a reliable certification.', 'מחצלות כשרות רק אם נעשו לשם סכך ולא לשכיבה. קנו אותן עם הכשר אמין.'], ['Sukkah 19b–20a; S.A. 629:6', 'סוכה יט ע״ב–כ ע״א; שו״ע תרכט:ו']);
+  else add('sukkah', 'ok', [`Schach of ${nm[0]}`, `סכך של ${nm[1]}`], ['It grew from the ground, it’s cut off, and it can’t become tamei.', 'גידולי קרקע, תלוש, ואינו מקבל טומאה.'], s1);
+
+  const pct = Math.round(SUK.shade * 100);
+  add('sukkah', SUK.shade > 0.5 ? 'ok' : 'fail', [`More shade than sun: ${pct}% measured`, `צילתה מרובה מחמתה: נמדד ${pct}%`],
+    ['Measured by casting the real schach onto the sukkah floor. It needs more shade than sun (over 50%). Shade from the boat or its awning doesn’t count, only the schach.' + (SUK.shade <= 0.5 ? ' Add more schach.' : ''),
+      'נמדד לפי הצל של הסכך האמיתי על רצפת הסוכה. צריך יותר צל משמש (מעל 50%). צל של הספינה או של הסוכך לא נחשב, רק הסכך.' + (SUK.shade <= 0.5 ? ' הוסיפו סכך.' : '')],
+    ['Mishnah Sukkah 2:2 (22a); S.A. 631:1', 'משנה סוכה ב:ב (כב ע״א); שו״ע תרלא:א']);
+  if (SUK.shade > 0.5) add('sukkah', SUK.shade >= 0.97 ? 'warn' : 'ok', SUK.shade >= 0.97 ? ['Too thick to see the stars', 'עבה מדי לראות כוכבים'] : ['You can see the stars through it', 'רואים דרכה את הכוכבים'],
+    SUK.shade >= 0.97 ? ['It’s kosher, but lechatchila the schach should be thin enough to see the big stars through it.', 'כשרה, אבל לכתחילה הסכך צריך להיות דק כך שיראו דרכו כוכבים גדולים.'] : ['Thin enough that the big stars show through at night — the ideal.', 'דק מספיק שבלילה רואים דרכו את הכוכבים הגדולים — כך לכתחילה.'],
+    ['Sukkah 22b; S.A. 631:3', 'סוכה כב ע״ב; שו״ע תרלא:ג']);
+  const av = SUK.avirMax;
+  if (av < 3 * T) add('sukkah', 'ok', ['No big gaps in the schach', 'אין אויר גדול בסכך'], [`The widest open strip is ${Math.round(av)} cm (${fT(av)}). Gaps under 3 tefachim are “lavud” — treated as closed.`, `הפס הפתוח הרחב ביותר ${Math.round(av)} ס״מ (${fT(av)}). פחות משלושה טפחים — ״לבוד״, כאילו סגור.`], ['Sukkah 17a; S.A. 632:1', 'סוכה יז ע״א; שו״ע תרלב:א']);
+  else if (SUK.bestSegment >= 7 * T && Math.min(CFG.w, CFG.d) >= 7 * T) add('sukkah', 'warn', [`An air gap of ${fT(av)}`, `אויר של ${fT(av)}`], [`A gap of 3 tefachim or more splits the roof. Only the part that has 7 × 7 tefachim of schach (with its walls) is a sukkah — sit there, not under the gap. The largest good part here is ${Math.round(SUK.bestSegment)} cm deep.`, `אויר של שלושה טפחים ומעלה מחלק את הסכך. רק החלק שיש בו 7 על 7 טפחים של סכך (עם דפנות) הוא סוכה — שבו שם, לא תחת האויר. החלק הכשר הגדול כאן בעומק ${Math.round(SUK.bestSegment)} ס״מ.`], ['S.A. 632:1', 'שו״ע תרלב:א']);
+  else add('sukkah', 'fail', [`An air gap of ${fT(av)}`, `אויר של ${fT(av)}`], ['A gap of 3 tefachim or more splits the schach, and no part is left that is 7 × 7 tefachim — the sukkah is pasul.', 'אויר של שלושה טפחים מחלק את הסכך ולא נשאר חלק של 7 על 7 טפחים — הסוכה פסולה.'], ['Sukkah 17a; S.A. 632:1', 'סוכה יז ע״א; שו״ע תרלב:א']);
+
+  const s626 = ['Mishnah Sukkah 1:2 (9b); S.A. 626:1', 'משנה סוכה א:ב (ט ע״ב); שו״ע תרכו:א'];
+  if (CFG.overhead === 'awning') add('sukkah', 'fail', ['Under the deck awning', 'מתחת לסוכך של הסיפון'], ['A sukkah under a roof, a tree or an awning is pasul — the shade must come from the schach alone. Roll the awning back and it becomes kosher again.', 'סוכה תחת גג, אילן או סוכך פסולה — הצל צריך לבוא מהסכך בלבד. גוללים את הסוכך והיא חוזרת להיות כשרה.'], s626);
+  else if (CFG.overhead === 'upper') add('sukkah', 'fail', ['Parked under the upper deck', 'חונה מתחת לסיפון העליון'], ['The ship’s upper deck is a roof over the schach. A sukkah under a roof is pasul — drive the car out into the open.', 'הסיפון העליון של הספינה הוא גג מעל הסכך. סוכה תחת הבית פסולה — הוציאו את המכונית לשטח פתוח.'], s626);
+  else add('sukkah', 'ok', ['Open sky above the schach', 'שמים פתוחים מעל הסכך'], ['Nothing — not the awning, not the upper deck, not the mast — is over the sukkah.', 'שום דבר — לא סוכך, לא סיפון עליון ולא התורן — אינו מעל הסוכה.'], ['S.A. 626:1', 'שו״ע תרכו:א']);
+  add('sukkah', CFG.supports === 'metal' ? 'warn' : 'ok', CFG.supports === 'metal' ? ['Schach resting on metal poles', 'סכך מונח על צינורות מתכת'] : ['Schach resting on wooden beams', 'סכך מונח על קורות עץ'],
+    CFG.supports === 'metal' ? ['Metal can become tamei. By law the schach may rest on it, but lechatchila it is better that the schach be held up by things that can’t become tamei — lay wooden slats on the metal.', 'מתכת מקבלת טומאה. מעיקר הדין מותר להניח עליה סכך, אבל לכתחילה עדיף שלא להעמיד את הסכך בדבר המקבל טומאה — הניחו פסי עץ על המתכת.'] : ['Wood beams can’t become tamei, so the schach is held up the best way.', 'קורות עץ אינן מקבלות טומאה, כך שהסכך מועמד בדרך הטובה ביותר.'],
+    ['Sukkah 21a–b; Rema 629:7', 'סוכה כא; רמ״א תרכט:ז']);
+  add('sukkah', CFG.order === 'walls' ? 'ok' : 'warn', CFG.order === 'walls' ? ['Walls first, then schach', 'קודם דפנות, אחר כך סכך'] : ['Schach went up before the walls', 'הסכך הונח לפני הדפנות'],
+    CFG.order === 'walls' ? ['Built in the right order: walls, then schach — “ta’aseh v’lo min he’asui”.', 'נבנתה בסדר הנכון: דפנות ואחר כך סכך — ״תעשה ולא מן העשוי״.'] : ['Some poskim invalidate schach placed before the walls. Fix it by lifting each piece of schach and laying it down again.', 'יש פוסקים שפוסלים סכך שהונח לפני הדפנות. מתקנים על ידי הגבהת כל חלק מהסכך והנחתו מחדש.'],
+    ['Rema 635:1', 'רמ״א תרלה:א']);
+  if (CFG.old && !CFG.renewed) add('sukkah', 'warn', ['Built more than 30 days before Sukkot', 'נבנתה יותר משלושים יום לפני החג'], ['A sukkah left from before (not made for the festival) is kosher, but you should renew something in it — lay a new tefach-square of schach across its whole length.', 'סוכה ישנה (שלא נעשתה לשם החג) כשרה, אבל צריך לחדש בה דבר — להניח סכך חדש ברוחב טפח על פני כל אורכה.'], ['Sukkah 9a; S.A. 636:1', 'סוכה ט ע״א; שו״ע תרלו:א']);
+  else if (CFG.old) add('sukkah', 'ok', ['An old sukkah, renewed', 'סוכה ישנה שחודשה'], ['Built long ago, but you renewed a tefach of schach for the festival.', 'נבנתה מזמן, אבל חידשתם טפח סכך לשם החג.'], ['S.A. 636:1', 'שו״ע תרלו:א']);
+  add('sukkah', CFG.permission ? 'ok' : 'warn', CFG.permission ? ['The car and the deck spot are yours to use', 'יש לכם רשות במכונית ובמקום על הסיפון'] : ['Using the car/ship without permission', 'שימוש במכונית או בספינה בלי רשות'],
+    CFG.permission ? ['You have the owner’s permission.', 'יש לכם רשות מהבעלים.'] : ['A “stolen sukkah” is a real problem, and a car or boat is movable property that can be stolen (unlike land). Get the owner’s permission — or ask your rav.', '״סוכה גזולה״ היא בעיה של ממש, ומכונית או ספינה הן מטלטלין שנגזלים (בניגוד לקרקע). בקשו רשות מהבעלים — או שאלו רב.'],
+    ['Sukkah 31a; S.A. 637:3 and commentaries', 'סוכה לא ע״א; שו״ע תרלז:ג ונושאי כלים']);
+  if (CFG.decor) add('sukkah', 'info', ['Decorations are part of the sukkah', 'נוי סוכה'], ['The lights, chains and pomegranates don’t spoil the schach. They become set aside for the whole festival — you can’t take them down to use for anything else.', 'האורות, השרשראות והרימונים אינם פוסלים את הסכך. הם מוקצים לכל ימי החג — אסור להורידם לשימוש אחר.'], ['Sukkah 10a; S.A. 638:2', 'סוכה י ע״א; שו״ע תרלח:ב']);
+
+  // ---------------- you and the day
+  add('you', 'info', yomTov ? ['First day of Sukkot (Yom Tov)', 'יום טוב ראשון של סוכות'] : ['Chol HaMoed', 'חול המועד'],
+    yomTov ? ['The first night has special laws: eating a kezayit of bread in the sukkah is an absolute obligation.', 'ללילה הראשון דינים מיוחדים: אכילת כזית פת בסוכה היא חובה גמורה.'] : ['The intermediate days: the sukkah is still your home, but work for the festival’s needs is allowed.', 'ימי חול המועד: הסוכה עדיין הבית שלכם, ומלאכה לצורך המועד מותרת.'],
+    ['S.A. 639:3', 'שו״ע תרלט:ג']);
+  if (CFG.driving) add('you', yomTov ? 'fail' : 'ok', yomTov ? ['Driving on Yom Tov is forbidden', 'נהיגה ביום טוב אסורה'] : ['Driving on Chol HaMoed', 'נהיגה בחול המועד'],
+    yomTov ? ['Burning fuel (and more) is melacha. The sukkah on the car is kosher — the driving isn’t.', 'שריפת דלק (ועוד) היא מלאכה. הסוכה על המכונית כשרה — הנהיגה לא.'] : ['Driving for the needs of the festival is permitted on Chol HaMoed. And you can eat in the sukkah while it moves — just like the wagon in the Mishnah.', 'נהיגה לצורך המועד מותרת בחול המועד. ואפשר לאכול בסוכה בזמן שהיא נוסעת — כמו העגלה שבמשנה.'],
+    yomTov ? ['S.A. 495 (melacha on Yom Tov)', 'שו״ע תצה (מלאכה ביום טוב)'] : ['S.A. 530 (Chol HaMoed); 628:2', 'שו״ע תקל (חול המועד); תרכח:ב']);
+  if (CFG.boat === 'sailing') add('you', yomTov ? 'warn' : 'ok', ['The ship is sailing', 'הספינה מפליגה'],
+    yomTov ? ['A Jew may not operate the ship on Yom Tov. Staying aboard a ship run by non-Jews involves questions of techum — ask a rav before planning this.', 'אסור ליהודי להפעיל את הספינה ביום טוב. שהייה בספינה שמפעילים גויים מעוררת שאלות של תחומין — שאלו רב לפני שמתכננים.'] : ['Sailing on Chol HaMoed is fine. Travellers are exempt from the sukkah by day when there’s no sukkah on the way — but you brought yours, so use it.', 'הפלגה בחול המועד מותרת. הולכי דרכים פטורים מסוכה ביום כשאין סוכה בדרך — אבל הבאתם את שלכם, אז השתמשו בה.'],
+    yomTov ? ['S.A. 248 and 404 (travel and techumin at sea)', 'שו״ע רמח ות״ד (הפלגה ותחומין בים)'] : ['S.A. 640:8', 'שו״ע תרמ:ח']);
+  const rainy = CFG.rain >= 35;
+  if (CFG.rain > 0) add('you', rainy ? 'warn' : 'ok', rainy ? ['Rain heavy enough to spoil the soup', 'גשם שמקלקל את התבשיל'] : ['A light drizzle', 'טפטוף קל'],
+    rainy ? (yomTov && night ? ['Rain like this exempts you — but on the first night you should wait a while, then still make kiddush and eat a kezayit in the sukkah (without the bracha of leishev).', 'גשם כזה פוטר — אבל בלילה הראשון ממתינים מעט, ואחר כך בכל זאת עושים קידוש ואוכלים כזית בסוכה (בלי ברכת לישב).'] : ['When rain would spoil your food you may eat inside. “Like a servant who pours water for his master, and the master throws it in his face.”', 'כשהגשם מקלקל את התבשיל מותר לאכול בבית. ״משל לעבד שבא למזוג כוס לרבו ושפך לו קיתון על פניו.״'])
+      : ['You are still obligated — light rain doesn’t exempt.', 'אתם עדיין חייבים — גשם קל אינו פוטר.'],
+    ['Mishnah Sukkah 2:9; S.A. 639:5 with Rema', 'משנה סוכה ב:ט; שו״ע תרלט:ה ורמ״א']);
+  const sick = CFG.seasick, stormy = CFG.wind >= 45;
+  if (sick || stormy) add('you', 'warn', sick ? ['Seasick: a “mitztaer”', 'מחלת ים: ״מצטער״'] : ['Gale-force wind', 'רוח סערה'],
+    [`Someone who suffers from being in the sukkah (${sick ? 'nausea' : 'wind blowing everything off the table, cold'}) is exempt — this is “mitztaer patur min hasukkah”.` + (yomTov && night ? ' On the first night many poskim still require a kezayit.' : ''),
+      `מי שמצטער בישיבה בסוכה (${sick ? 'בחילה' : 'רוח שמעיפה הכול מהשולחן, קור'}) פטור — ״מצטער פטור מן הסוכה״.` + (yomTov && night ? ' בלילה הראשון פוסקים רבים עדיין מחייבים כזית.' : '')],
+    ['Sukkah 26a; S.A. 640:4 and commentaries', 'סוכה כו ע״א; שו״ע תרמ:ד ונושאי כלים']);
+  if (yomTov) add('you', night ? 'ok' : 'info', night ? ['It’s after nightfall', 'כבר צאת הכוכבים'] : ['Wait for nightfall', 'חכו לצאת הכוכבים'],
+    night ? ['The first-night meal must be eaten after tzeit hakochavim — now is the time.', 'סעודת הלילה הראשון נאכלת אחרי צאת הכוכבים — עכשיו הזמן.'] : ['Kiddush and the first-night meal in the sukkah only after the stars come out.', 'קידוש וסעודת הלילה הראשון בסוכה רק אחרי צאת הכוכבים.'],
+    ['S.A. 639:3', 'שו״ע תרלט:ג']);
+  add('you', 'info', ['The bracha', 'הברכה'], ['When you eat more than a kebeitza of bread (or cake) in the sukkah, say “leishev basukkah”. On the first night add shehecheyanu at kiddush.', 'כשאוכלים יותר מכביצה פת (או מזונות) בסוכה מברכים ״לישב בסוכה״. בלילה הראשון מוסיפים שהחיינו בקידוש.'], ['S.A. 639:2, 8; 643:1', 'שו״ע תרלט:ב, ח; תרמג:א']);
+  add('you', 'info', ['Sleeping on board', 'שינה בספינה'], ['Sleeping is part of dwelling in the sukkah too — but wind, cold and seasickness exempt, like for eating.', 'גם שינה היא חלק מהמצווה לדור בסוכה — אבל רוח, קור ומחלת ים פוטרים, כמו באכילה.'], ['S.A. 639:2; 640:4', 'שו״ע תרלט:ב; תרמ:ד']);
+
+  return R;
+}
+
+function verdictOf(R) {
+  const s = R.filter((r) => r.grp === 'sukkah');
+  if (s.some((r) => r.st === 'fail')) return 'fail';
+  if (s.some((r) => r.st === 'warn')) return 'warn';
+  return 'ok';
+}
+function eatVerdict(R, v) {
+  const yomTov = CFG.day === 'first', night = CFG.hour >= 18.9 || CFG.hour < 5.5;
+  if (v === 'fail') return tt('<b>Not here.</b> This sukkah is pasul — eating in it isn’t the mitzvah, and a bracha of leishev basukkah would be in vain.', '<b>לא כאן.</b> הסוכה פסולה — אכילה בה אינה מצווה, וברכת ״לישב בסוכה״ תהיה לבטלה.');
+  const drive = CFG.driving && yomTov ? tt(' <b>Also: stop driving</b> — it’s Yom Tov.', ' <b>וגם: תפסיקו לנהוג</b> — יום טוב היום.') : '';
+  if (CFG.seasick || CFG.wind >= 45) return (yomTov && night ? tt('<b>Yes — a kezayit at least.</b> You’re exempt as a mitztaer, but on the first night many say to eat a kezayit in the sukkah anyway.', '<b>כן — לפחות כזית.</b> אתם פטורים כמצטערים, אבל בלילה הראשון רבים אומרים לאכול כזית בסוכה בכל זאת.') : tt('<b>You may go inside.</b> You’re a mitztaer (seasick / storm), so you’re exempt right now.', '<b>מותר להיכנס הביתה.</b> אתם מצטערים (מחלת ים / סערה), ולכן פטורים כרגע.')) + drive;
+  if (CFG.rain >= 35) return (yomTov && night ? tt('<b>Wait, then eat a kezayit here.</b> Rain exempts, but the first night is special — after waiting, eat a kezayit in the sukkah without leishev.', '<b>חכו, ואז אכלו כאן כזית.</b> גשם פוטר, אבל הלילה הראשון מיוחד — אחרי המתנה אוכלים כזית בסוכה בלי ״לישב״.') : tt('<b>You may eat inside.</b> Rain that spoils the food exempts you.', '<b>מותר לאכול בבית.</b> גשם שמקלקל את התבשיל פוטר.')) + drive;
+  if (yomTov && !night) return tt('<b>Not yet for the first-night meal</b> — wait for the stars. You may sit in it now.', '<b>עוד לא לסעודת הלילה הראשון</b> — חכו לכוכבים. לשבת בה אפשר כבר עכשיו.') + drive;
+  return tt(`<b>Yes!</b> Make kiddush, say <i>leishev basukkah</i>${yomTov ? ' and shehecheyanu' : ''}, and eat.`, `<b>כן!</b> עשו קידוש, ברכו <i>לישב בסוכה</i>${yomTov ? ' ושהחיינו' : ''}, ותאכלו.`) + (v === 'warn' ? tt(' (Fix the ⚠ items for the best mitzvah.)', ' (תקנו את סעיפי ה־⚠ למצווה מהודרת.)') : '') + drive;
+}
+
+let RULE_FILTER = 'all';
+function renderHalacha() {
+  const R = evaluateHalacha();
+  const v = verdictOf(R);
+  const big = $('v-big'); big.className = v;
+  big.textContent = v === 'ok' ? tt('Kosher', 'כשרה') : v === 'warn' ? tt('Kosher, but…', 'כשרה, אבל…') : tt('Pasul', 'פסולה');
+  $('v-he').textContent = HE() ? (v === 'ok' ? 'Kosher' : v === 'warn' ? 'Kosher bedieved' : 'Pasul') : (v === 'ok' ? 'סוכה כשרה' : v === 'warn' ? 'כשרה בדיעבד' : 'סוכה פסולה');
+  $('v-he').style.direction = HE() ? 'ltr' : 'rtl';
+  const nf = R.filter((r) => r.st === 'fail').length, nw = R.filter((r) => r.st === 'warn').length, no = R.filter((r) => r.st === 'ok').length;
+  $('v-sub').textContent = v === 'ok' ? tt('Every rule for the sukkah itself is met.', 'כל דיני הסוכה עצמה מתקיימים.') : v === 'warn' ? tt('Valid, but not the ideal way — see the ⚠ items.', 'כשרה, אבל לא לכתחילה — ראו את סעיפי ה־⚠.') : tt('At least one rule makes this sukkah invalid — see the ✕ items.', 'לפחות דין אחד פוסל את הסוכה — ראו את סעיפי ה־✕.');
+  $('eat').innerHTML = tt('🍞 <b>Can you eat here right now?</b><br>', '🍞 <b>אפשר לאכול כאן עכשיו?</b><br>') + eatVerdict(R, v);
+  $('counts').innerHTML = `<span><b style="color:var(--ok)">${no}</b>${tt('kept', 'מקוימות')}</span><span><b style="color:var(--warn)">${nw}</b>${tt('to improve', 'לשיפור')}</span><span><b style="color:var(--fail)">${nf}</b>${tt('problems', 'בעיות')}</span><span><b style="color:var(--info)">${R.length}</b>${tt('halachot', 'הלכות')}</span>`;
+  const el = $('rules'); const open = new Set([...el.querySelectorAll('.rule.open')].map((x) => x.dataset.t));
+  el.innerHTML = '';
+  const order = { fail: 0, warn: 1, ok: 2, info: 3 };
+  let lastGrp = null;
+  const shown = R.filter((r) => RULE_FILTER === 'all' || (RULE_FILTER === 'fail' ? r.st === 'fail' || r.st === 'warn' : r.grp === RULE_FILTER));
+  shown.sort((a, b) => (a.grp === b.grp ? 0 : a.grp === 'sukkah' ? -1 : 1) || order[a.st] - order[b.st]);
+  for (const r of shown) {
+    if (r.grp !== lastGrp) { const g = document.createElement('div'); g.className = 'grp'; g.style.cssText = 'padding:12px 0 2px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)'; g.textContent = r.grp === 'sukkah' ? tt('The sukkah', 'הסוכה') : tt('You, the day and the sea', 'אתם, היום והים'); el.appendChild(g); lastGrp = r.grp; }
+    const d = document.createElement('div'); d.className = 'rule ' + r.st + (open.has(r.t) ? ' open' : ''); d.dataset.t = r.t;
+    d.innerHTML = `<div class="ic">${{ ok: '✓', warn: '!', fail: '✕', info: 'i' }[r.st]}</div><div><div class="t">${r.t}</div><div class="d">${r.d}</div><div class="src">📖 ${r.src}</div></div>`;
+    d.onclick = () => d.classList.toggle('open');
+    el.appendChild(d);
+  }
+  if (!shown.length) el.innerHTML = `<p style="color:var(--dim);font-size:13px;margin-top:14px">${tt('Nothing to fix here. 🎉', 'אין כאן מה לתקן. 🎉')}</p>`;
+  return v;
+}
+
+// ==== 10_ui.js
+// ---------------------------------------------------------------- build panel: controls + presets (labels are [English, Hebrew])
+const tfx = (cm) => `${cm} ${tt('cm', 'ס״מ')}<small>${toT(cm).toFixed(1)} ${tt('tef.', 'טפחים')}</small>`;
+const CONTROLS = [
+  [['Measure & moment', 'שיעור וזמן'], [
+    { key: 'shiur', label: ['Shiur', 'שיעור'], type: 'seg', opts: [['naeh', ['R’ Chaim Na’eh', 'ר׳ חיים נאה']], ['ci', ['Chazon Ish', 'חזון איש']]] },
+    { key: 'day', label: ['Day', 'יום'], type: 'seg', opts: [['first', ['Yom Tov', 'יום טוב']], ['cholhamoed', ['Chol HaMoed', 'חול המועד']]] },
+    { key: 'hour', label: ['Time', 'שעה'], type: 'range', min: 6, max: 23.5, step: 0.05, fmt: (v) => clockText(v) },
+  ]],
+  [['The sea', 'הים'], [
+    { key: 'boat', label: ['Ship', 'ספינה'], type: 'seg', opts: [['anchored', ['Anchored', 'עוגנת']], ['sailing', ['Sailing', 'מפליגה']]] },
+    { key: 'wind', label: ['Wind', 'רוח'], type: 'range', min: 0, max: 70, step: 1, fmt: (v) => `${v} ${tt('km/h', 'קמ״ש')}<small>${v < 12 ? tt('calm', 'רגועה') : v < 30 ? tt('breeze', 'בריזה') : v < 45 ? tt('strong', 'חזקה') : tt('gale', 'סערה')}</small>` },
+    { key: 'rain', label: ['Rain', 'גשם'], type: 'range', min: 0, max: 100, step: 1, fmt: (v) => `${v}%<small>${v === 0 ? tt('dry', 'יבש') : v < 35 ? tt('drizzle', 'טפטוף') : tt('spoils food', 'מקלקל תבשיל')}</small>` },
+    { key: 'seasick', label: ['You feel', 'מרגישים'], type: 'check', text: ['Seasick', 'מחלת ים'] },
+  ]],
+  [['The vehicle', 'הרכב'], [
+    { key: 'vehicle', label: ['Built on', 'בנויה על'], type: 'seg', opts: [['pickup', ['Pickup bed', 'ארגז טנדר']], ['sedan', ['Car roof', 'גג מכונית']], ['deck', ['Deck', 'הסיפון']]] },
+    { key: 'strapped', label: ['Frame', 'שלד'], type: 'check', text: ['Strapped down', 'קשור ברצועות'] },
+    { key: 'driving', label: ['Car', 'רכב'], type: 'check', text: ['Driving it around', 'נוהגים בו'] },
+  ]],
+  [['Size (inside)', 'מידות (פנים)'], [
+    { key: 'w', label: ['Width', 'רוחב'], type: 'range', min: 40, max: 300, step: 1, fmt: tfx },
+    { key: 'd', label: ['Length', 'אורך'], type: 'range', min: 40, max: 320, step: 1, fmt: tfx },
+    { key: 'h', label: ['Height', 'גובה'], type: 'range', min: 50, max: 300, step: 1, fmt: tfx },
+  ]],
+  [['Walls', 'דפנות'], [
+    { key: 'walls', label: ['How many', 'כמה'], type: 'seg', opts: [['4', '4'], ['3', '3'], ['2t', ['2 + tefach', '2 + טפח']], ['2', '2']] },
+    { key: 'wallType', label: ['Made of', 'עשויות'], type: 'seg', opts: [['canvas', ['Canvas', 'בד']], ['sheet', ['Bedsheets', 'סדינים']], ['wood', ['Plywood', 'דיקט']]] },
+    { key: 'tied', label: ['Fabric', 'הבד'], type: 'check', text: ['Tied tight on all sides', 'קשור היטב מכל הצדדים'] },
+    { key: 'wallH', label: ['Wall height', 'גובה דופן'], type: 'range', min: 20, max: 300, step: 1, fmt: tfx },
+    { key: 'wallGap', label: ['Gap at bottom', 'רווח מלמטה'], type: 'range', min: 0, max: 60, step: 1, fmt: tfx },
+  ]],
+  [['Schach', 'סכך'], [
+    { key: 'schach', label: ['Material', 'חומר'], type: 'select', opts: [['palm', ['Palm fronds', 'כפות תמרים']], ['bamboo', ['Bamboo poles', 'מקלות במבוק']], ['mats', ['Bamboo mats (for schach)', 'מחצלות (לשם סכך)']], ['branches', ['Evergreen branches', 'ענפי אורן']], ['boards', ['Narrow boards (8 cm)', 'נסרים צרים (8 ס״מ)']], ['wideboards', ['Wide boards (40 cm)', 'נסרים רחבים (40 ס״מ)']], ['tarp', ['Plastic tarp', 'יריעת ניילון']], ['metal', ['Metal sheet', 'פח']], ['corn', ['Corn cobs (food)', 'קלחי תירס (אוכל)']]] },
+    { key: 'amount', label: ['How much', 'כמות'], type: 'range', min: 0, max: 100, step: 1, fmt: (v) => `${v}%<small>${tt('laid', 'מונח')}</small>` },
+    { key: 'avir', label: ['Air gap', 'אויר'], type: 'range', min: 0, max: 80, step: 1, fmt: tfx },
+    { key: 'supports', label: ['Resting on', 'מונח על'], type: 'seg', opts: [['wood', ['Wood beams', 'קורות עץ']], ['metal', ['Metal poles', 'צינורות מתכת']]] },
+    { key: 'overhead', label: ['Above it', 'מעליה'], type: 'seg', opts: [['none', ['Open sky', 'שמים פתוחים']], ['awning', ['Awning', 'סוכך']], ['upper', ['Upper deck', 'סיפון עליון']]] },
+  ]],
+  [['How it was built', 'איך נבנתה'], [
+    { key: 'order', label: ['Order', 'סדר'], type: 'seg', opts: [['walls', ['Walls first', 'דפנות קודם']], ['schach', ['Schach first', 'סכך קודם']]] },
+    { key: 'old', label: ['Age', 'גיל'], type: 'check', text: ['Built over 30 days ago', 'נבנתה לפני יותר מ־30 יום'] },
+    { key: 'renewed', label: '', type: 'check', text: ['Renewed a tefach of schach', 'חידשו טפח בסכך'] },
+    { key: 'permission', label: ['Owner', 'בעלים'], type: 'check', text: ['Owner gave permission', 'הבעלים הרשו'] },
+    { key: 'decor', label: ['Hiddur', 'נוי סוכה'], type: 'check', text: ['Lights, chains, pomegranates', 'אורות, שרשראות, רימונים'] },
+  ]],
+];
+const PRESETS = [
+  [['Chabad sukkah-mobile', 'סוכה ניידת של חב״ד'], { vehicle: 'pickup', w: 150, d: 175, h: 190, wallH: 185, wallGap: 4, walls: '4', wallType: 'canvas', tied: true, strapped: true, schach: 'palm', amount: 70, avir: 0, supports: 'wood', overhead: 'none', order: 'walls', old: false, permission: true, wind: 16, rain: 0, seasick: false, boat: 'anchored', driving: false, decor: true }],
+  [['Tiny roof sukkah', 'סוכה זעירה על הגג'], { vehicle: 'sedan', w: 62, d: 70, h: 82, wallH: 82, wallGap: 2, walls: '3', wallType: 'wood', strapped: true, schach: 'bamboo', amount: 75, avir: 0, overhead: 'none', decor: false }],
+  [['Rabbi Akiva’s ship', 'הספינה של רבי עקיבא'], { vehicle: 'deck', w: 200, d: 220, h: 180, wallH: 175, wallGap: 6, walls: '3', wallType: 'sheet', tied: false, strapped: false, schach: 'branches', amount: 80, boat: 'sailing', wind: 42, overhead: 'none' }, 'akiva'],
+  [['Under the awning', 'מתחת לסוכך'], { vehicle: 'pickup', overhead: 'awning', w: 150, d: 175, h: 190, walls: '4', wallType: 'canvas', tied: true, strapped: true, schach: 'palm', amount: 70 }],
+  [['Plastic tarp', 'יריעת ניילון'], { vehicle: 'pickup', schach: 'tarp', amount: 100, overhead: 'none' }],
+  [['Two walls + tefach', 'שתיים ושלישית טפח'], { vehicle: 'pickup', walls: '2t', wallType: 'wood', schach: 'mats', amount: 100, overhead: 'none' }],
+  [['Storm at sea', 'סערה בים'], { vehicle: 'pickup', wind: 58, rain: 60, seasick: true, boat: 'sailing', overhead: 'none', schach: 'palm', amount: 75, tied: true, strapped: true }],
+  [['Gap in the schach', 'אויר בסכך'], { vehicle: 'pickup', schach: 'bamboo', amount: 85, avir: 40, overhead: 'none' }],
+];
+const REBUILD_KEYS = new Set(['vehicle', 'strapped', 'w', 'd', 'h', 'walls', 'wallType', 'wallH', 'wallGap', 'schach', 'amount', 'avir', 'supports', 'overhead', 'decor', 'shiur']);
+let rebuildPending = false;
+function onCfgChange(key) {
+  if (key === 'wind' || key === 'boat') setSeaState(CFG.wind, CFG.boat === 'sailing');
+  if (key === 'shiur') refreshTefachLabels();
+  if (REBUILD_KEYS.has(key) && !rebuildPending) { rebuildPending = true; requestAnimationFrame(() => { rebuildPending = false; buildSukkah(); renderHalacha(); }); }
+  else renderHalacha();
+  store.set('cfg', JSON.stringify(CFG));
+}
+const CTRL_EL = {};
+function buildControls() {
+  const root = $('controls'); root.innerHTML = '';
+  for (const [title, items] of CONTROLS) {
+    const sec = document.createElement('div'); sec.className = 'sec'; sec.innerHTML = `<h2>${tr(title)}</h2>`; root.appendChild(sec);
+    for (const c of items) {
+      const row = document.createElement('div'); row.className = 'row';
+      const lab = document.createElement('label'); lab.textContent = tr(c.label); row.appendChild(lab);
+      let el;
+      if (c.type === 'range') {
+        el = document.createElement('div'); el.className = 'rng';
+        const inp = document.createElement('input'); inp.type = 'range'; inp.min = c.min; inp.max = c.max; inp.step = c.step; inp.value = CFG[c.key];
+        const out = document.createElement('output'); out.innerHTML = c.fmt(CFG[c.key]);
+        inp.oninput = () => { CFG[c.key] = parseFloat(inp.value); out.innerHTML = c.fmt(CFG[c.key]); onCfgChange(c.key); };
+        el.append(inp, out); CTRL_EL[c.key] = { set: (v) => { inp.value = v; out.innerHTML = c.fmt(v); }, refresh: () => { out.innerHTML = c.fmt(CFG[c.key]); } };
+      } else if (c.type === 'seg') {
+        el = document.createElement('div'); el.className = 'seg';
+        const btns = c.opts.map(([v, t]) => { const b = document.createElement('button'); b.textContent = tr(t); b.onclick = () => { CFG[c.key] = v; btns.forEach((x) => x.classList.toggle('on', x === b)); onCfgChange(c.key); }; el.appendChild(b); return [v, b]; }).map(([v, b]) => { b.dataset.v = v; return b; });
+        CTRL_EL[c.key] = { set: (v) => btns.forEach((b) => b.classList.toggle('on', b.dataset.v === String(v))) };
+      } else if (c.type === 'select') {
+        el = document.createElement('select'); for (const [v, t] of c.opts) { const o = document.createElement('option'); o.value = v; o.textContent = tr(t); el.appendChild(o); }
+        el.onchange = () => { CFG[c.key] = el.value; onCfgChange(c.key); };
+        CTRL_EL[c.key] = { set: (v) => { el.value = v; } };
+      } else {
+        el = document.createElement('label'); el.className = 'tog';
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = CFG[c.key];
+        cb.onchange = () => { CFG[c.key] = cb.checked; onCfgChange(c.key); };
+        el.append(cb, document.createTextNode(tr(c.text))); CTRL_EL[c.key] = { set: (v) => { cb.checked = !!v; } };
+      }
+      row.appendChild(el); sec.appendChild(row);
+      CTRL_EL[c.key].set(CFG[c.key]);
+    }
+  }
+  const pr = $('presets'); pr.innerHTML = '';
+  for (const [name, p, tag] of PRESETS) {
+    const b = document.createElement('button'); b.textContent = tr(name);
+    b.onclick = () => { applyPreset(p); if (tag === 'akiva') $('story').hidden = false; };
+    pr.appendChild(b);
+  }
+  // rule filters
+  for (const b of $('filters').children) b.onclick = () => { RULE_FILTER = b.dataset.f; [...$('filters').children].forEach((x) => x.classList.toggle('on', x === b)); renderHalacha(); };
+  // mobile tabs
+  for (const b of document.querySelectorAll('.mtabs button')) b.onclick = () => {
+    document.querySelectorAll('.mtabs button').forEach((x) => x.classList.toggle('on', x === b));
+    $('build').classList.toggle('hide', b.dataset.p !== 'build'); $('check').classList.toggle('hide', b.dataset.p !== 'check');
+  };
+}
+const PRESET_BASE = { ...PRESETS[0][1], walls: '4', wallType: 'canvas', tied: true, supports: 'wood', order: 'walls', old: false, renewed: false, permission: true };
+function applyPreset(p, keepRest = false) {
+  if (!keepRest) Object.assign(CFG, PRESET_BASE);
+  Object.assign(CFG, p);
+  for (const k in CTRL_EL) CTRL_EL[k].set(CFG[k]);
+  setSeaState(CFG.wind, CFG.boat === 'sailing');
+  buildSukkah(); renderHalacha();
+  store.set('cfg', JSON.stringify(CFG));
+  if (camMode === 'orbit') frameOrbit();
+}
+function refreshTefachLabels() { for (const k of ['w', 'd', 'h', 'wallH', 'wallGap', 'avir']) CTRL_EL[k] && CTRL_EL[k].refresh(); }
+
+// ==== 10b_walk.js
+// ---------------------------------------------------------------- walking on the ship: collision boxes in boat space (y measured from the deck)
+const WALK = { pos: new THREE.Vector3(-2.2, 0, -2.5), vy: 0, onGround: true, boxes: [], bob: 0 };
+const STEP = 0.43, RADIUS = 0.28, EYE = 1.64;
+
+function box(x0, x1, z0, z1, y0, y1, tag) { WALK.boxes.push({ x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1), y0, y1, tag }); }
+function rebuildWalkColliders() {
+  WALK.boxes = [];
+  // wheelhouse cabin (world z 11.6 .. 17.0), doorway at x -0.5..0.5
+  box(-3.7, -0.5, 11.55, 11.65, 0, 2.6); box(0.5, 3.7, 11.55, 11.65, 0, 2.6);
+  box(-3.7, 3.7, 16.95, 17.05, 0, 2.6); box(-3.75, -3.65, 11.6, 17, 0, 2.6); box(3.65, 3.75, 11.6, 17, 0, 2.6);
+  box(-0.5, 0.5, 11.55, 11.65, 1.95, 2.6); // lintel over the door
+  box(0.8, 3.4, 11.65, 12.15, 0, 1.0, 'helm'); box(1.75, 2.25, 13.15, 13.7, 0, 1.2); // console, chair
+  box(-3.6, -1.6, 11.65, 12.15, 0, 0.9); // galley
+  box(-3.4, -0.4, 16.45, 16.95, 0, 0.48); box(-2.4, -1.4, 15.67, 16.23, 0, 0.77); // bench, table
+  box(3.0, 3.6, 16.45, 16.95, 0, 1.2); // life jackets
+  // upper deck floor + rails + bridge + pillars
+  box(-4.4, 4.4, 7.6, 16.8, 2.72, 2.83, 'upper');
+  box(-4.4, 3.75, 7.55, 7.65, 2.83, 3.95); box(4.3, 4.45, 8.5, 16.8, 2.83, 3.95); box(-4.45, -4.3, 7.6, 16.8, 2.83, 3.95); box(-4.4, 4.4, 16.72, 16.85, 2.83, 3.95);
+  box(-2.3, 2.3, 13.2, 16.4, 2.83, 5.1);
+  box(-3.7, -3.5, 7.8, 8.0, 0, 2.72); box(3.5, 3.7, 7.8, 8.0, 0, 2.72);
+  // stairs up the starboard side (world z 3.9 .. 7.6)
+  for (let i = 0; i < 14; i++) box(3.85, 4.4, 3.9 + i * 0.264, 7.62, 0, (i + 1) * 0.2, 'stairs');
+  // bollards, the other car
+  for (const [x, z] of [[-3.8, -11], [3.8, -11], [-4, 15.5], [4, 15.5]]) box(x - 0.16, x + 0.16, z - 0.16, z + 0.16, 0, 0.45);
+  box(-0.9, 0.9, -10.5, -5.95, 0, 1.5);
+  if (BOAT.awning.visible) for (const [x, z] of [[-3.2, -1.4], [3.2, -1.4], [-3.2, 6.8], [3.2, 6.8]]) box(x - 0.05, x + 0.05, z - 0.05, z + 0.05, 0, 4.2);
+  // the vehicle
+  const vz = SUK.vehicle.position.z, m = SUK.vehicle.userData.mount;
+  if (CFG.vehicle === 'pickup') {
+    box(-0.93, 0.93, vz - 2.75, vz + 0.75, 0, 1.86, 'car');
+    box(-0.92, 0.92, vz + 0.75, vz + 2.6, 0, 0.84, 'bed');
+    box(0.78, 0.93, vz + 0.75, vz + 2.6, 0.84, 1.32); box(-0.93, -0.78, vz + 0.75, vz + 2.6, 0.84, 1.32);
+    box(-0.92, 0.92, vz + 2.6, vz + 3.07, 0.5, 0.84, 'bed');
+    box(-0.25, 0.25, vz + 3.27, vz + 3.63, 0, 0.42, 'stool');
+  } else if (CFG.vehicle === 'sedan') box(-0.9, 0.9, vz - 2.28, vz + 2.28, 0, 1.46, 'car');
+  // the sukkah's walls and posts (it rides on the vehicle)
+  const fy = CFG.vehicle === 'deck' ? 0 : m.y, cx = m.x, cz = vz + m.z;
+  const W = CFG.w / 100, D = CFG.d / 100, H = CFG.h / 100;
+  const y0 = fy + CFG.wallGap / 100, y1 = fy + Math.min(H, CFG.wallGap / 100 + CFG.wallH / 100);
+  const T = 0.05;
+  for (const [x, z] of [[-W / 2, -D / 2], [W / 2, -D / 2], [-W / 2, D / 2], [W / 2, D / 2]]) box(cx + x - 0.04, cx + x + 0.04, cz + z - 0.04, cz + z + 0.04, fy, fy + H);
+  const list = CFG.walls === '4' ? ['front', 'left', 'right', 'back'] : CFG.walls === '3' ? ['front', 'left', 'right'] : ['front', 'left'];
+  for (const n of list) {
+    if (n === 'front') box(cx - W / 2, cx + W / 2, cz - D / 2 - T, cz - D / 2 + T, y0, y1);
+    if (n === 'left') box(cx - W / 2 - T, cx - W / 2 + T, cz - D / 2, cz + D / 2, y0, y1);
+    if (n === 'right') box(cx + W / 2 - T, cx + W / 2 + T, cz - D / 2, cz + D / 2, y0, y1);
+    if (n === 'back') { const door = W > 1 ? Math.min(0.65, W * 0.45) : 0; box(cx - W / 2, cx - door / 2, cz + D / 2 - T, cz + D / 2 + T, y0, y1); box(cx + door / 2, cx + W / 2, cz + D / 2 - T, cz + D / 2 + T, y0, y1); }
+  }
+  if (CFG.walls === '2t') box(cx + W / 2 - T, cx + W / 2 + T, cz - D / 2, cz - D / 2 + tefachM() * 1.05, y0, y1);
+  // the table inside, if there is one
+  if (W >= 1.15 && D >= 1.4 && H >= 1.3) { const tw = Math.min(0.8, W - 0.45), td = Math.min(0.6, D - 0.9); box(cx - tw / 2, cx + tw / 2, cz + 0.05 - td / 2, cz + 0.05 + td / 2, fy, fy + 0.74); }
+  WALK.sukkah = { x0: cx - W / 2, x1: cx + W / 2, z0: cz - D / 2, z1: cz + D / 2, fy, top: fy + H };
+}
+
+function blocked(x, z, feet) {
+  for (const b of WALK.boxes) {
+    if (b.y1 <= feet + STEP || b.y0 >= feet + 1.75) continue;
+    if (x + RADIUS > b.x0 && x - RADIUS < b.x1 && z + RADIUS > b.z0 && z - RADIUS < b.z1) return true;
+  }
+  // stay aboard: the hull railings on the main deck, the bow ramp, the stern
+  if (feet < 2) {
+    if (z < -11.6 || z > 16.7) return true;
+    if (Math.abs(x) > HULL_W(z) - 0.42) return true;
+  }
+  return false;
+}
+function groundUnder(x, z, feet) {
+  let g = 0;
+  for (const b of WALK.boxes) {
+    if (b.y1 > feet + STEP) continue;
+    if (x + RADIUS * 0.5 > b.x0 && x - RADIUS * 0.5 < b.x1 && z + RADIUS * 0.5 > b.z0 && z - RADIUS * 0.5 < b.z1) g = Math.max(g, b.y1);
+  }
+  return g;
+}
+function updateWalk(dt) {
+  const p = WALK.pos;
+  const f = (KEYS.KeyW || KEYS.ArrowUp ? 1 : 0) - (KEYS.KeyS || KEYS.ArrowDown ? 1 : 0), s = (KEYS.KeyD || KEYS.ArrowRight ? 1 : 0) - (KEYS.KeyA || KEYS.ArrowLeft ? 1 : 0);
+  const sp = KEYS.ShiftLeft || KEYS.ShiftRight ? 3.8 : 1.9;
+  let dx = (-Math.sin(LOOK.yaw) * f + Math.cos(LOOK.yaw) * s), dz = (-Math.cos(LOOK.yaw) * f - Math.sin(LOOK.yaw) * s);
+  const l = Math.hypot(dx, dz); if (l > 0) { dx = dx / l * sp * dt; dz = dz / l * sp * dt; }
+  // the deck tilts: you slide a touch downhill as the ship rolls
+  dx += -BOAT.roll * 0.35 * dt; dz += BOAT.pitch * 0.35 * dt;
+  if (!blocked(p.x + dx, p.z, p.y)) p.x += dx;
+  if (!blocked(p.x, p.z + dz, p.y)) p.z += dz;
+  if (KEYS.Space && WALK.onGround) { WALK.vy = 4.3; WALK.onGround = false; }
+  const feet0 = p.y;
+  WALK.vy -= 9.8 * dt; p.y += WALK.vy * dt;
+  const g = groundUnder(p.x, p.z, Math.max(p.y, feet0));
+  if (p.y <= g) { p.y = WALK.onGround ? damp(p.y, g, 18, dt) : g; if (p.y < g) p.y = g; WALK.vy = 0; WALK.onGround = true; }
+  else if (p.y > g + 0.05) WALK.onGround = false;
+  if (WALK.onGround && g > p.y) p.y = g;
+  WALK.bob += dt * (l > 0 && WALK.onGround ? sp * 2.4 : 0);
+  // where am I?
+  const S = WALK.sukkah; let where;
+  if (S && p.x > S.x0 && p.x < S.x1 && p.z > S.z0 && p.z < S.z1 && Math.abs(p.y - S.fy) < 0.3) where = tt('In the sukkah', 'בתוך הסוכה');
+  else if (p.z > 11.65 && p.z < 16.95 && Math.abs(p.x) < 3.65 && p.y < 1.5) where = tt('In the wheelhouse cabin', 'בתא ההגה');
+  else if (p.y > 2.6) where = tt('On the upper deck', 'על הסיפון העליון');
+  else if (p.y > 0.3 && CFG.vehicle === 'pickup' && p.z > SUK.vehicle.position.z + 0.6) where = tt('On the truck bed', 'בארגז הטנדר');
+  else where = tt('On deck', 'על הסיפון');
+  $('where').textContent = where + tt(' · Space to jump', ' · רווח לקפיצה');
+}
+function walkCameraLocal(out) { return out.set(WALK.pos.x, BOAT.deckY + WALK.pos.y + EYE + Math.abs(Math.sin(WALK.bob)) * 0.03, WALK.pos.z); }
+
+// ==== 11_main.js
+// ---------------------------------------------------------------- boot, cameras, rain, gulls, sound, loop
+const clock = new THREE.Clock();
+let composer, bloomPass, fxaaPass, controls, camMode = 'orbit';
+const LOOK = { yaw: 0, pitch: 0, pos: new THREE.Vector3(0, 0, 4), drag: false };
+
+async function buildTextures() {
+  TEX.wood = genWood(true);
+  TEX.weave = genWeave();
+  await loadStep(0.2, tt('Weaving the canvas', 'אורגים את הבד'));
+  try { await document.fonts.load('900 60px "Frank Ruhl Libre"'); await document.fonts.load('700 30px "Assistant"'); } catch (e) {}
+  TEX.panels = [genPanelTex(0), genPanelTex(1), genPanelTex(2), genPanelTex(3)];
+}
+function buildPost() {
+  const w = window.innerWidth, h = window.innerHeight;
+  composer = new EffectComposer(renderer); composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h);
+  composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(new ShaderPass({ uniforms: { tDiffuse: { value: null } }, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform sampler2D tDiffuse; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); if (any(isnan(c.rgb)) || any(isinf(c.rgb))) c.rgb = vec3(0.0); gl_FragColor = vec4(min(c.rgb, vec3(64.0)), 1.0); }' }));
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.2, 0.5, 2.0); composer.addPass(bloomPass);
+  composer.addPass(new OutputPass());
+  fxaaPass = new ShaderPass(FXAAShader); composer.addPass(fxaaPass);
+  fxaaPass.material.uniforms.resolution.value.set(1 / (w * renderer.getPixelRatio()), 1 / (h * renderer.getPixelRatio()));
+}
+
+// ---- rain (streaks around the camera, slanted by the wind)
+const RAIN = { mesh: null, n: 4000, pos: null };
+function buildRain() {
+  const g = new THREE.BufferGeometry(); const p = new Float32Array(RAIN.n * 6);
+  for (let i = 0; i < RAIN.n; i++) { const x = rr(-25, 25), y = rr(0, 22), z = rr(-25, 25); p.set([x, y, z, x, y - 0.4, z], i * 6); }
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3)); RAIN.pos = p;
+  RAIN.mesh = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xaab8c4, transparent: true, opacity: 0.35 }));
+  RAIN.mesh.frustumCulled = false; scene.add(RAIN.mesh);
+}
+function updateRain(dt) {
+  const k = CFG.rain / 100; RAIN.mesh.visible = k > 0.01;
+  if (!RAIN.mesh.visible) return;
+  const count = Math.floor(RAIN.n * k); RAIN.mesh.geometry.setDrawRange(0, count * 2);
+  const p = RAIN.pos, wx = CFG.wind / 30 * 0.25;
+  for (let i = 0; i < count; i++) {
+    const o = i * 6; let y = p[o + 1] - dt * 11;
+    let x = p[o] + wx * dt * 11;
+    if (y < -1) { y = 22; x = rr(-25, 25); p[o + 2] = rr(-25, 25); }
+    if (x > 25) x -= 50;
+    p[o] = x; p[o + 1] = y; p[o + 3] = x - wx * 0.4; p[o + 4] = y - 0.45; p[o + 5] = p[o + 2];
+  }
+  RAIN.mesh.geometry.attributes.position.needsUpdate = true;
+  RAIN.mesh.position.set(camera.position.x, camera.position.y - 8, camera.position.z);
+  RAIN.mesh.material.opacity = 0.18 + k * 0.25;
+}
+
+// ---- seagulls circling the ship
+const GULLS = [];
+function buildGulls() {
+  const m = new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.8, side: THREE.DoubleSide });
+  for (let i = 0; i < 6; i++) {
+    const g = new THREE.Group(); scene.add(g);
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.25, 4, 8), m); body.rotation.x = Math.PI / 2; g.add(body);
+    const wings = [];
+    for (const s of [-1, 1]) { const wgeo = new THREE.PlaneGeometry(0.55, 0.16); wgeo.translate(s * 0.28, 0, 0); const w = new THREE.Mesh(wgeo, m); g.add(w); wings.push(w); }
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.06, 6), new THREE.MeshStandardMaterial({ color: 0xe0a020 })); tip.rotation.x = -Math.PI / 2; tip.position.z = -0.2; g.add(tip);
+    GULLS.push({ g, wings, r: 14 + rand() * 16, h: 8 + rand() * 8, sp: 0.15 + rand() * 0.1, ph: rand() * TAU, cx: rr(-8, 8), cz: rr(-10, 10) });
+  }
+}
+function updateGulls(t) {
+  for (const b of GULLS) {
+    const a = b.ph + t * b.sp * (CFG.wind > 45 ? 1.6 : 1);
+    b.g.position.set(b.cx + Math.cos(a) * b.r, b.h + Math.sin(t * 0.7 + b.ph) * 1.2, b.cz + Math.sin(a) * b.r);
+    b.g.rotation.set(0, -a, 0.4);
+    const f = Math.sin(t * 7 + b.ph) * 0.5; b.wings[0].rotation.z = f; b.wings[1].rotation.z = -f;
+  }
+}
+
+// ---- sound: waves, wind, rain, flapping canvas, engine
+const SND = { ctx: null };
+function audioInit() {
+  if (SND.ctx) { if (SND.ctx.state === 'suspended') SND.ctx.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  const ctx = new AC(); SND.ctx = ctx;
+  const out = ctx.createGain(); out.gain.value = 0.6; out.connect(ctx.destination);
+  const nb = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate); const d = nb.getChannelData(0); let b = 0;
+  for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; b = (b + 0.02 * w) / 1.02; d[i] = w * 0.5 + b * 3; }
+  const loop = (type, freq, q) => { const s = ctx.createBufferSource(); s.buffer = nb; s.loop = true; s.playbackRate.value = 0.7 + Math.random() * 0.5; const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q; const g = ctx.createGain(); g.gain.value = 0; s.connect(f); f.connect(g); g.connect(out); s.start(); return { f, g }; };
+  SND.waves = loop('lowpass', 420, 0.5); SND.wind = loop('bandpass', 600, 0.7); SND.rain = loop('highpass', 2500, 0.3); SND.flap = loop('bandpass', 1400, 1.2);
+  const eng = ctx.createOscillator(); eng.type = 'sawtooth'; eng.frequency.value = 42; const ef = ctx.createBiquadFilter(); ef.type = 'lowpass'; ef.frequency.value = 160; const eg = ctx.createGain(); eg.gain.value = 0; eng.connect(ef); ef.connect(eg); eg.connect(out); eng.start(); SND.engine = eg;
+}
+function updateSound(t) {
+  if (!SND.ctx) return;
+  const swell = 0.5 + 0.5 * Math.sin(t * 0.55) * Math.sin(t * 0.21 + 1);
+  SND.waves.g.gain.value = (0.12 + SEA.strength * 0.25) * (0.6 + swell * 0.6);
+  SND.waves.f.frequency.value = 300 + swell * 400;
+  SND.wind.g.gain.value = CFG.wind / 70 * 0.28 * (0.7 + 0.3 * Math.sin(t * 0.9));
+  SND.wind.f.frequency.value = 400 + CFG.wind * 12;
+  SND.rain.g.gain.value = CFG.rain / 100 * 0.25;
+  const flap = CFG.tied || CFG.wallType === 'wood' ? 0 : CFG.wind / 70;
+  SND.flap.g.gain.value = flap * 0.3 * Math.max(0, Math.sin(t * (6 + CFG.wind * 0.1)));
+  SND.engine.gain.value = CFG.boat === 'sailing' ? 0.05 : 0;
+}
+
+// ---- cameras
+function sukkahWorldCenter(out) { const H = CFG.h / 100; return SUK.root.localToWorld(out.set(0, H * 0.55, 0)); }
+function frameOrbit() {
+  sukkahWorldCenter(controls.target);
+  const off = new THREE.Vector3(-5.5, 3.2, -6.5).multiplyScalar(0.8 + Math.max(CFG.w, CFG.d) / 400);
+  camera.position.copy(controls.target).add(off);
+}
+function setCam(mode) {
+  camMode = mode; document.querySelectorAll('#cam button').forEach((b) => b.classList.toggle('on', b.dataset.c === mode));
+  controls.enabled = mode === 'orbit' || mode === 'sea';
+  if (mode === 'orbit') frameOrbit();
+  if (mode === 'sea') { controls.target.set(0, 3, 0); camera.position.set(-38, 7, -26); }
+  if (mode === 'inside') { LOOK.yaw = 0; LOOK.pitch = 0.35; }
+  if (mode === 'deck') { LOOK.yaw = Math.PI * 1.25; LOOK.pitch = 0.05; }
+  $('hint').textContent = tr(HINTS[mode]);
+  $('hud-walk').hidden = $('where').hidden = mode !== 'deck';
+}
+const _prevT = new THREE.Vector3();
+function updateCamera(dt) {
+  if (camMode === 'orbit') {
+    // follow the sukkah as the ship rocks
+    _prevT.copy(controls.target); sukkahWorldCenter(tmpV);
+    controls.target.lerp(tmpV, 1 - Math.exp(-dt * 4)); camera.position.add(tmpV2.subVectors(controls.target, _prevT));
+    controls.update();
+  } else if (camMode === 'sea') { controls.update(); camera.position.y = Math.max(camera.position.y, 1.5); }
+  else {
+    // first person, riding with the ship
+    let local;
+    if (camMode === 'inside') local = SUK.root.localToWorld(tmpV.set(0, Math.min(1.05, CFG.h / 100 - 0.12), (CFG.d / 100) * 0.28));
+    else {
+      updateWalk(dt);
+      local = BOAT.root.localToWorld(walkCameraLocal(tmpV));
+    }
+    camera.position.copy(local);
+    tmpQ.setFromEuler(tmpE.set(LOOK.pitch, LOOK.yaw, 0, 'YXZ'));
+    camera.quaternion.copy(BOAT.root.quaternion).multiply(tmpQ);
+  }
+}
+const KEYS = {};
+addEventListener('keydown', (e) => { if ((e.target.tagName === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox') || e.target.tagName === 'SELECT') return; KEYS[e.code] = true; if (camMode === 'deck' && ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { e.preventDefault(); if (e.target.blur) e.target.blur(); } });
+addEventListener('keyup', (e) => { KEYS[e.code] = false; });
+canvas.addEventListener('pointerdown', (e) => { audioInit(); if (camMode === 'inside' || camMode === 'deck') { LOOK.drag = true; canvas.setPointerCapture(e.pointerId); } });
+canvas.addEventListener('pointerup', () => { LOOK.drag = false; });
+canvas.addEventListener('pointermove', (e) => { if (!LOOK.drag) return; LOOK.yaw -= e.movementX * 0.004; LOOK.pitch = clamp(LOOK.pitch - e.movementY * 0.004, -1.2, 1.4); });
+document.addEventListener('click', () => audioInit(), { once: true });
+
+function onResize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+  if (!composer) return;
+  composer.setSize(w, h); fxaaPass.material.uniforms.resolution.value.set(1 / (w * renderer.getPixelRatio()), 1 / (h * renderer.getPixelRatio()));
+}
+addEventListener('resize', onResize);
+
+async function boot() {
+  try { const s = JSON.parse(store.get('cfg')); if (s) Object.assign(CFG, s); } catch (e) {}
+  document.documentElement.dir = HE() ? 'rtl' : 'ltr';
+  await loadStep(0.05, tt('Mixing the paint', 'מערבבים צבע'));
+  await buildTextures();
+  buildSky();
+  sunLight.shadow.camera.left = -14; sunLight.shadow.camera.right = 14; sunLight.shadow.camera.top = 14; sunLight.shadow.camera.bottom = -14;
+  sunLight.target.position.set(0, 2, 2);
+  await loadStep(0.4, tt('Filling the Mediterranean', 'ממלאים את הים התיכון'));
+  buildOcean(); buildCoast(); setSeaState(CFG.wind, CFG.boat === 'sailing');
+  await loadStep(0.6, tt('Launching the ferry', 'משיקים את המעבורת'));
+  sukkahMaterials();
+  buildBoat();
+  await loadStep(0.75, tt('Parking the pickup', 'מחנים את הטנדר'));
+  buildSukkah();
+  buildRain(); buildGulls();
+  buildPost();
+  controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 2; controls.maxDistance = 90; controls.maxPolarAngle = Math.PI * 0.49;
+  buildControls();
+  $('lang').onclick = toggleLang;
+  applyLang();
+  $('cam').querySelectorAll('button').forEach((b) => b.onclick = () => setCam(b.dataset.c));
+  SKY.time = CFG.hour; updateSky(0);
+  setCam('orbit');
+  renderHalacha();
+  await loadStep(1, tt('Chag sameach', 'חג שמח'));
+  $('loading').hidden = true;
+  requestAnimationFrame(loop);
+}
+function frame(dt) {
+  U.time.value += dt; const t = U.time.value;
+  SKY.time = damp(SKY.time, CFG.hour, 3, dt);
+  U.wind.value = CFG.wind / 25 * (0.7 + 0.3 * Math.sin(t * 0.4));
+  if (CFG.boat === 'sailing') SEA.flow.y -= dt * 6;
+  updateSky(dt);
+  updateBoat(dt, t);
+  // an unstrapped frame shudders and leans as the ship rolls
+  if (SUK.root) {
+    const loose = CFG.strapped ? 0 : 1;
+    const k = loose * (0.3 + CFG.wind / 40);
+    SUK.root.rotation.z = damp(SUK.root.rotation.z, BOAT.roll * 1.5 * loose + Math.sin(t * 5.3) * 0.006 * k, 6, dt);
+    SUK.root.rotation.x = damp(SUK.root.rotation.x, BOAT.pitch * loose + Math.sin(t * 4.1) * 0.005 * k, 6, dt);
+    if (CFG.driving && CFG.vehicle !== 'deck') SUK.vehicle.position.y = BOAT.deckY + Math.sin(t * 17) * 0.004;
+  }
+  updateWallMotion(dt);
+  if (SUK.pendants) for (const p of SUK.pendants) { p.piv.rotation.x = Math.sin(t * 1.6 + p.ph) * 0.08 * U.wind.value - BOAT.pitch; p.piv.rotation.z = Math.sin(t * 1.1 + p.ph) * 0.06 * U.wind.value - BOAT.roll; }
+  const dusk = SKY.nightK;
+  M.bulb.emissiveIntensity = 0.1 + dusk * 3.5;
+  for (const l of SUK.lights) { l.intensity = dusk * 1.1; l.visible = dusk > 0.05; }
+  updateRain(dt); updateGulls(t);
+  updateCamera(dt);
+  updateSound(t);
+  bloomPass.strength = 0.16 + SKY.nightK * 0.3; bloomPass.threshold = lerp(2.2, 1.35, SKY.nightK);
+}
+function loop() { requestAnimationFrame(loop); frame(Math.min(0.05, clock.getDelta())); composer.render(); }
+
+// debug handle for testing from the console
+window.SEA_SIM = { THREE, scene, camera, renderer, CFG, SUK, SKY, BOAT, WALK, KEYS, LOOK, toggleLang, updateWalk, applyPreset, evaluateHalacha, setCam, frame, get composer() { return composer; },
+  tick(n = 30) { for (let i = 0; i < n; i++) frame(1 / 30); },
+  shot(n = 'shot') { composer.render(); return fetch('/__shot?n=' + n, { method: 'POST', body: renderer.domElement.toDataURL('image/jpeg', 0.85) }).then((r) => r.text()); },
+  ready() { return new Promise((r) => { const i = setInterval(() => { if ($('loading').hidden) { clearInterval(i); r(); } }, 200); }); } };
+
+boot().catch((e) => { console.error(e); $('lstep').textContent = 'Something went wrong: ' + e.message; });
+
+</script>
+</body>
+</html>

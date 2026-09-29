@@ -1,0 +1,127 @@
+<title>Sukkah at Sea</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ink:#f5efe3; --dim:rgba(245,239,227,.64); --faint:rgba(245,239,227,.32);
+  --panel:rgba(12,18,24,.72); --line:rgba(245,239,227,.14); --field:rgba(255,255,255,.06);
+  --gold:#e9b75f; --ok:#7fd08a; --warn:#f0c255; --fail:#ef6a55; --info:#7fb8ef;
+  --title:"Frank Ruhl Libre",Georgia,serif; --body:"Assistant","Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;background:#07101a;color:var(--ink);font-family:var(--body)}
+#game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.panel{position:fixed;top:12px;bottom:12px;width:340px;background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+#build{left:12px}
+#check{right:12px;width:380px}
+.phead{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.phead h1{margin:0;font-family:var(--title);font-size:21px;line-height:1.15}
+.phead h1 span{color:var(--gold)}
+.phead p{margin:4px 0 0;font-size:12.5px;color:var(--dim)}
+.scroll{overflow-y:auto;padding:4px 16px 16px;flex:1}
+.scroll::-webkit-scrollbar{width:8px}.scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+.sec{margin-top:14px}
+.sec h2{margin:0 0 8px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.row{display:grid;grid-template-columns:118px 1fr;align-items:center;gap:8px;margin:7px 0;font-size:13.5px}
+.row label{color:var(--dim)}
+.row .val{font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.rng{display:grid;grid-template-columns:1fr 78px;gap:8px;align-items:center}
+.rng output{font-size:12.5px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1}
+.rng output small{display:block;color:var(--dim);font-size:11px}
+select{width:100%;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px 8px;font:inherit;font-size:13px}
+select option{background:#12202c}
+.seg{display:flex;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:2px}
+.seg button{all:unset;flex:1;text-align:center;padding:5px 4px;border-radius:6px;font-size:12.5px;cursor:pointer;color:var(--dim)}
+.seg button.on{background:rgba(233,183,95,.22);color:var(--ink);font-weight:600}
+.tog{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px}
+.tog input{accent-color:var(--gold);width:16px;height:16px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.presets button{all:unset;cursor:pointer;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--field)}
+.presets button:hover{border-color:var(--gold)}
+/* verdict */
+#verdict{padding:14px 16px;border-bottom:1px solid var(--line)}
+#v-big{font-family:var(--title);font-size:30px;font-weight:900;line-height:1}
+#v-big.ok{color:var(--ok)}#v-big.warn{color:var(--warn)}#v-big.fail{color:var(--fail)}
+#v-he{font-family:var(--title);font-size:17px;color:var(--dim);direction:rtl;margin-top:2px}
+#v-sub{font-size:13px;color:var(--dim);margin-top:6px;line-height:1.45}
+#eat{margin-top:10px;padding:9px 11px;border-radius:9px;background:var(--field);border:1px solid var(--line);font-size:13px;line-height:1.45}
+#eat b{font-weight:700}
+.counts{display:flex;gap:10px;margin-top:10px;font-size:12px;color:var(--dim)}
+.counts span b{font-size:15px;color:var(--ink);margin-right:3px}
+.rule{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.rule .ic{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#0b1016;margin-top:1px}
+.rule.ok .ic{background:var(--ok)}.rule.warn .ic{background:var(--warn)}.rule.fail .ic{background:var(--fail)}.rule.info .ic{background:var(--info)}
+.rule .t{font-size:13.5px;font-weight:600;line-height:1.3}
+.rule .d{font-size:12.5px;color:var(--dim);line-height:1.45;margin-top:2px}
+.rule .src{font-size:11.5px;color:var(--gold);margin-top:3px;display:none}
+.rule.open .src{display:block}
+.rule .grp{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.filters{display:flex;gap:6px;padding:10px 16px 0}
+.filters button{all:unset;cursor:pointer;font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim)}
+.filters button.on{color:var(--ink);border-color:var(--gold)}
+/* camera bar */
+#cam{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px;backdrop-filter:blur(10px)}
+#cam button{all:unset;cursor:pointer;padding:6px 13px;border-radius:999px;font-size:13px;color:var(--dim)}
+#cam button.on{background:rgba(233,183,95,.22);color:var(--ink)}
+#hint{position:fixed;left:50%;bottom:62px;transform:translateX(-50%);font-size:12px;color:var(--dim);text-shadow:0 1px 4px #000;white-space:nowrap}
+#story{position:fixed;left:50%;top:14px;transform:translateX(-50%);max-width:min(520px,calc(100vw - 780px));min-width:260px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.5;backdrop-filter:blur(10px)}
+#story b{font-family:var(--title);font-size:15px}
+#story .x{float:right;cursor:pointer;color:var(--dim);margin-left:8px}
+#loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#12304a,#050a10 70%);z-index:10}
+#loading .he{font-family:var(--title);font-weight:900;font-size:64px;color:var(--gold);direction:rtl}
+#loading .en{font-family:var(--title);font-size:22px;letter-spacing:.25em;text-transform:uppercase;margin-top:4px}
+#lbar{width:280px;height:3px;background:rgba(255,255,255,.1);margin-top:28px;border-radius:2px;overflow:hidden}#lbar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+#lstep{margin-top:10px;font-size:12.5px;color:var(--dim)}
+.mtabs{display:none}
+.langbtn{all:unset;float:right;cursor:pointer;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--gold);color:var(--gold);margin-left:8px}
+.langbtn:hover{background:rgba(233,183,95,.15)}
+[dir=rtl] .langbtn{float:left;margin-left:0;margin-right:8px}
+[dir=rtl] #build{left:auto;right:12px}
+[dir=rtl] #check{right:auto;left:12px}
+[dir=rtl] .rng output{text-align:left}
+[dir=rtl] .sec h2,[dir=rtl] .rule .grp{letter-spacing:0}
+[dir=rtl] #v-he{direction:ltr}
+#hud-walk{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 3px #000;pointer-events:none}
+#where{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);font-size:13px;padding:5px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
+@media (max-width:960px){
+  .panel{top:auto;bottom:56px;left:8px!important;right:8px!important;width:auto!important;height:46vh}
+  .panel.hide{display:none}
+  .mtabs{display:flex;position:fixed;top:10px;left:50%;transform:translateX(-50%);gap:6px;background:var(--panel);border-radius:999px;padding:4px;border:1px solid var(--line)}
+  .mtabs button{all:unset;padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer}
+  .mtabs button.on{background:rgba(233,183,95,.22)}
+  #story{display:none}
+  #hint{display:none}
+}
+</style>
+
+<canvas id="game"></canvas>
+
+<div class="mtabs"><button data-p="build" class="on" data-i18n="tBuild">Build</button><button data-p="check" data-i18n="tCheck">Halacha</button><button data-p="none" data-i18n="tView">View</button></div>
+
+<aside id="build" class="panel">
+  <div class="phead"><button id="lang" class="langbtn" data-i18n="lang">עברית</button><h1 data-i18n="title">Sukkah <span>on a car</span> on a boat</h1><p data-i18n="sub">Build it, sail it, and see which halachot it keeps.</p>
+    <div class="presets" id="presets"></div>
+  </div>
+  <div class="scroll" id="controls"></div>
+</aside>
+
+<aside id="check" class="panel hide">
+  <div id="verdict">
+    <div id="v-big">…</div><div id="v-he"></div><div id="v-sub"></div>
+    <div id="eat"></div>
+    <div class="counts" id="counts"></div>
+  </div>
+  <div class="filters" id="filters"><button data-f="all" class="on" data-i18n="fAll">All</button><button data-f="fail" data-i18n="fFail">Problems</button><button data-f="sukkah" data-i18n="fSukkah">The sukkah</button><button data-f="you" data-i18n="fYou">You & the day</button></div>
+  <div class="scroll" id="rules"></div>
+</aside>
+
+<div id="story"><span class="x" id="story-x">✕</span><b>Rabbi Akiva's sukkah</b><br>Rabban Gamliel and Rabbi Akiva were sailing on a ship. Rabbi Akiva built a sukkah on the deck, and the next day the wind blew it away. Rabban Gamliel asked him, <i>“Akiva, where is your sukkah?”</i> — Sukkah 23a. The halacha follows Rabbi Akiva: a sukkah on a ship or a wagon is kosher, as long as it could stand in an ordinary wind on land.</div>
+<div id="hud-walk" hidden></div><div id="where" hidden></div>
+<div id="hint">Drag to look around · scroll to zoom · click a rule for its source</div>
+<div id="cam"><button data-c="orbit" class="on" data-i18n="cOrbit">Orbit</button><button data-c="inside" data-i18n="cInside">Sit inside</button><button data-c="deck" data-i18n="cDeck">On deck</button><button data-c="sea" data-i18n="cSea">From the sea</button></div>
+
+<div id="loading"><div class="he">סוכה בים</div><div class="en">Sukkah at Sea</div><div id="lbar"><i></i></div><div id="lstep">Preparing…</div></div>
