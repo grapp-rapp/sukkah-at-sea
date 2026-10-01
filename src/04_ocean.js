@@ -95,10 +95,10 @@ function buildOcean() {
         float fn = foamN(fp * 0.35 + uTime * 0.05);
         float fn2 = foamN(fp * 1.7 - uTime * 0.08);
         float caps = smoothstep(0.72, 1.0, crest * 0.75 + fn * 0.35 + fn2 * 0.2) * uFoam * 0.85;
-        // hull wake: V behind the stern (boat heads north, stern at z = +17) and bow spray
-        float wz = vSeaW.z - 16.0; float half_ = 4.2 + max(wz, 0.0) * 0.32;
+        // hull wake: V behind the stern (boat heads north, stern at z = +22) and bow spray
+        float wz = vSeaW.z - 21.0; float half_ = 5.6 + max(wz, 0.0) * 0.32;
         float wake = uSail * step(0.0, wz) * smoothstep(half_, half_ * 0.55, abs(vSeaW.x)) * exp(-wz * 0.012) * smoothstep(0.35, 0.75, foamN(fp * 0.6 + vec2(0.0, uTime * 0.4)));
-        float hull = smoothstep(6.2, 4.7, length(vec2(vSeaW.x, vSeaW.z * 0.27))) * (0.3 + uSail * 0.6) * smoothstep(0.45, 0.85, foamN(fp * 1.3 + uTime * 0.6));
+        float hull = smoothstep(7.4, 6.0, length(vec2(vSeaW.x, (vSeaW.z + 2.0) * 0.25))) * (0.3 + uSail * 0.6) * smoothstep(0.45, 0.85, foamN(fp * 1.3 + uTime * 0.6));
         float foam = clamp(caps + wake + hull, 0.0, 1.0);
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.92, 0.95, 0.96), foam);`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>

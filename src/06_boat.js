@@ -1,12 +1,12 @@
 // ---------------------------------------------------------------- the boat: a small car ferry (bow = -z, heading north)
 const BOAT = {
-  root: new THREE.Group(), deckY: 2.1, len: 34, beam: 9.2,
+  root: new THREE.Group(), deckY: 2.1, len: 48, beam: 12, bow: -26, stern: 22, obstacles: [],
   pitch: 0, roll: 0, heave: 0, navLights: [], deckLights: [], flag: null, awning: null, upper: null,
 };
 const HULL_W = (z) => { // half-beam along the hull
-  const L = 17; if (z < -L) return 0;
-  if (z < -9) { const t = (z + L) / 8; return BOAT.beam / 2 * Math.sin(t * Math.PI / 2) ** 0.8; }
-  return BOAT.beam / 2 * (z > 15 ? 0.97 : 1);
+  if (z < BOAT.bow || z > BOAT.stern) return 0;
+  if (z < -12) { const t = (z - BOAT.bow) / 14; return BOAT.beam / 2 * Math.sin(t * Math.PI / 2) ** 0.8; }
+  return BOAT.beam / 2 * (z > 18 ? 1 - (z - 18) * 0.02 : 1);
 };
 function buildHull() {
   // lofted hull: sections along z, each from deck edge down to the keel
@@ -15,9 +15,9 @@ function buildHull() {
   const white = new THREE.Color(0xf1f1ec), navy = new THREE.Color(0x1d3a5c), red = new THREE.Color(0x8e2a24), stripe = new THREE.Color(0xd8a13a);
   const cols = ring.length * 2 - 1; // mirrored
   for (let s = 0; s <= secs; s++) {
-    const z = -17 + (s / secs) * 34;
+    const z = BOAT.bow + (s / secs) * BOAT.len;
     const hw = Math.max(0.02, HULL_W(z));
-    const bowLift = z < -10 ? (z + 10) * -0.06 : 0; // sheer rises at the bow
+    const bowLift = z < -18 ? (z + 18) * -0.04 : 0; // sheer rises at the bow
     const pts = [];
     for (let i = 0; i < ring.length; i++) pts.push([ring[i][0] * hw, ring[i][1] + (i === 0 ? bowLift : 0)]);
     const full = [...pts.map(([x, y]) => [x, y]), ...pts.slice(0, -1).reverse().map(([x, y]) => [-x, y])];
@@ -32,7 +32,7 @@ function buildHull() {
     idx.push(a, c, b, b, c, d);
   }
   // stern transom
-  const base = pos.length / 3; const zS = 17;
+  const base = pos.length / 3; const zS = BOAT.stern;
   for (let i = 0; i < cols; i++) { pos.push(pos[(secs * cols + i) * 3], pos[(secs * cols + i) * 3 + 1], zS); col.push(0.12, 0.23, 0.36); }
   pos.push(0, 1.0, zS); col.push(0.12, 0.23, 0.36);
   for (let i = 0; i < cols - 1; i++) idx.push(base + i, base + i + 1, base + cols);
@@ -66,10 +66,10 @@ function buildBoat() {
   const dset = deckTexture(); for (const k of ['map', 'normalMap', 'roughnessMap']) dset[k].repeat.set(2, 7);
   const deckMat = new THREE.MeshStandardMaterial({ ...dset, metalness: 0.25, color: 0x9ea79c });
   const shape = new THREE.Shape(); const hw0 = (z) => HULL_W(z) - 0.05;
-  shape.moveTo(0, 16.6); for (let z = -16; z <= 17; z += 1) shape.lineTo(hw0(z), -z); for (let z = 17; z >= -16; z -= 1) shape.lineTo(-hw0(z), -z);
+  shape.moveTo(0, -BOAT.bow); for (let z = BOAT.bow + 1; z <= BOAT.stern; z += 1) shape.lineTo(hw0(z), -z); for (let z = BOAT.stern; z >= BOAT.bow + 1; z -= 1) shape.lineTo(-hw0(z), -z);
   { const h = new THREE.Path(); const x0 = STAIRWELL.x0 - 0.05, x1 = STAIRWELL.x1 + 0.05, z0 = STAIRWELL.z0, z1 = STAIRWELL.z1 + 0.15; h.moveTo(x0, -z0); h.lineTo(x1, -z0); h.lineTo(x1, -z1); h.lineTo(x0, -z1); h.lineTo(x0, -z0); shape.holes.push(h); }
   const dg = new THREE.ShapeGeometry(shape); dg.rotateX(-Math.PI / 2);
-  const uv = dg.attributes.uv, dp = dg.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, dp.getX(i) / 9.2, dp.getZ(i) / 34);
+  const uv = dg.attributes.uv, dp = dg.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, dp.getX(i) / BOAT.beam, dp.getZ(i) / BOAT.len);
   const deck = new THREE.Mesh(dg, deckMat); deck.position.y = D; deck.receiveShadow = true; BOAT.root.add(deck);
   // yellow safety lines + parking bay lines
   const yl = new THREE.MeshStandardMaterial({ color: 0xe8b61c, roughness: 0.7 });
@@ -79,18 +79,18 @@ function buildBoat() {
   const steel = new THREE.MeshStandardMaterial({ color: 0xe9ebe8, roughness: 0.5, metalness: 0.3 });
   const railM = new THREE.MeshStandardMaterial({ color: 0xd9dcd9, roughness: 0.35, metalness: 0.7 });
   for (const s of [-1, 1]) {
-    for (let z = -12; z <= 16.5; z += 1.5) {
+    for (let z = -22; z <= 21.5; z += 1.5) {
       addMesh(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 6), railM, s * (hw0(z) - 0.05), D + 0.5, z, BOAT.root);
     }
     for (const y of [0.5, 1.0]) {
-      const pts = []; for (let z = -12; z <= 16.5; z += 0.5) pts.push(new THREE.Vector3(s * (hw0(z) - 0.05), D + y, z));
+      const pts = []; for (let z = -22; z <= 21.5; z += 0.5) pts.push(new THREE.Vector3(s * (hw0(z) - 0.05), D + y, z));
       BOAT.root.add(shadowed(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, 0.022, 6), railM)));
     }
     // lifebuoys
     for (const z of [-4, 10]) { const lb = addMesh(new THREE.TorusGeometry(0.33, 0.08, 10, 24), new THREE.MeshStandardMaterial({ color: 0xf06a1e, roughness: 0.6 }), s * (hw0(z) - 0.12), D + 0.8, z, BOAT.root); lb.rotation.y = Math.PI / 2; }
   }
   // bow ramp (landing-craft style ferry) raised
-  const ramp = new THREE.Group(); ramp.position.set(0, D, -12.5); ramp.rotation.x = -1.35; BOAT.root.add(ramp);
+  const ramp = new THREE.Group(); ramp.position.set(0, D, -22.5); ramp.rotation.x = -0.12; BOAT.root.add(ramp);
   addMesh(new THREE.BoxGeometry(6.4, 4.6, 0.18), steel, 0, 2.3, 0, ramp);
   for (let k = 0; k < 8; k++) addMesh(new THREE.BoxGeometry(6.2, 0.06, 0.1), steel, 0, 0.4 + k * 0.55, 0.12, ramp);
   // bollards
@@ -142,15 +142,83 @@ function buildBoat() {
   const fl = new THREE.SpotLight(0xffe2b8, 0, 26, 0.7, 0.7, 1.3); fl.position.set(0, D + 4.9, 7.5); fl.target.position.set(0, D, 1.5); BOAT.root.add(fl, fl.target); BOAT.deckLights.push(fl);
   // a second car parked behind for scale
   const other = makeSedan(0x2f4f7a); other.position.set(0, D, -8.2); BOAT.root.add(other);
+  buildMarineDetails(steel, railM);
   shadowed(BOAT.root);
   deck.castShadow = false;
 }
 let _black;
+// Working marine equipment, kept at human scale on the expanded ferry.
+function buildMarineDetails(steel, railM) {
+  const D = BOAT.deckY, root = BOAT.root;
+  const navy = new THREE.MeshStandardMaterial({ color: 0x193650, roughness: 0.48, metalness: 0.35 });
+  const orange = new THREE.MeshStandardMaterial({ color: 0xe97122, roughness: 0.5 });
+  const rope = new THREE.MeshStandardMaterial({ color: 0xb7a184, roughness: 0.95 });
+  const teak = new THREE.MeshStandardMaterial({ ...TEX.wood, color: 0xad8657, roughness: 0.72 });
+  const obstacle = (x0, x1, z0, z1, height) => BOAT.obstacles.push([x0, x1, z0, z1, 0, height]);
+  const pipe = (points, radius, material) => root.add(shadowed(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 24, radius, 6), material)));
+  // Closed stern rails and a continuous toe plate along each side.
+  for (const y of [0.5, 1]) pipe([[-5.4, D + y, 21.5], [0, D + y, 21.5], [5.4, D + y, 21.5]], 0.025, railM);
+  for (const x of [-5.4, -2.7, 0, 2.7, 5.4]) addMesh(new THREE.CylinderGeometry(0.025, 0.025, 1, 6), railM, x, D + 0.5, 21.5, root);
+  for (const s of [-1, 1]) {
+    const edge = []; for (let z = -22; z <= 21.5; z += 0.5) edge.push([s * (HULL_W(z) - 0.12), D + 0.09, z]);
+    pipe(edge, 0.08, steel);
+    // Hull rubbing strakes, round portholes and rubber docking fenders.
+    for (const y of [0.6, 1.0]) {
+      const pts = []; for (let z = -20; z <= 21; z += 1) pts.push([s * (HULL_W(z) + 0.025), y, z]);
+      pipe(pts, 0.045, navy);
+    }
+    for (let z = -10; z <= 18; z += 3.5) {
+      const port = addMesh(new THREE.CylinderGeometry(0.19, 0.19, 0.07, 16), railM, s * (HULL_W(z) + 0.025), 1.6, z, root); port.rotation.z = Math.PI / 2;
+      const glass = addMesh(new THREE.CircleGeometry(0.145, 16), BOAT.cabinGlass, s * (HULL_W(z) + 0.065), 1.6, z, root); glass.rotation.y = s * Math.PI / 2;
+    }
+    for (const z of [-14, -5, 5, 18]) {
+      const x = s * (HULL_W(z) + 0.16);
+      addMesh(new THREE.CylinderGeometry(0.15, 0.18, 1.1, 10), MAT_BLACK(), x, 0.95, z, root);
+      pipe([[x, 1.5, z], [s * (HULL_W(z) - 0.1), D + 0.7, z]], 0.018, rope);
+    }
+    // Twin mooring bitts and coiled rope on the open foredeck.
+    const x = s * 3.1, z = -18;
+    addMesh(new THREE.BoxGeometry(0.9, 0.08, 0.6), navy, x, D + 0.04, z, root);
+    for (const dx of [-0.25, 0.25]) {
+      addMesh(new THREE.CylinderGeometry(0.1, 0.13, 0.5, 10), navy, x + dx, D + 0.3, z, root);
+      addMesh(new THREE.CylinderGeometry(0.16, 0.16, 0.07, 10), navy, x + dx, D + 0.57, z, root);
+    }
+    for (let i = 0; i < 4; i++) { const coil = addMesh(new THREE.TorusGeometry(0.25 + i * 0.045, 0.022, 6, 24), rope, x, D + 0.04, z + 1, root); coil.rotation.x = Math.PI / 2; }
+    obstacle(x - 0.5, x + 0.5, z - 0.35, z + 0.35, 0.65);
+    // Enclosed rescue boats with white cabins and davit arms.
+    const rescue = new THREE.Group(); rescue.position.set(s * 4.9, D + 0.7, 9.7); root.add(rescue);
+    addMesh(new RoundedBoxGeometry(1.35, 0.65, 3.6, 3, 0.25), orange, 0, 0, 0, rescue);
+    addMesh(new RoundedBoxGeometry(1.05, 0.65, 2.3, 3, 0.2), steel, 0, 0.55, 0, rescue);
+    addMesh(new THREE.BoxGeometry(0.9, 0.3, 0.025), BOAT.cabinGlass, 0, 0.6, -1.16, rescue);
+    for (const dz of [-1.3, 1.3]) pipe([[s * 4.3, D, 9.7 + dz], [s * 4.3, D + 2.2, 9.7 + dz], [s * 5, D + 2.2, 9.7 + dz], [s * 5, D + 1.35, 9.7 + dz]], 0.045, railM);
+    obstacle(s * 4.9 - 0.75, s * 4.9 + 0.75, 7.8, 11.6, 1.7);
+    // Passenger benches on the aft terrace, clear of the cabin doorway.
+    for (const z of [18.4, 20.2]) {
+      addMesh(new THREE.BoxGeometry(2.4, 0.1, 0.55), teak, s * 3.7, D + 0.5, z, root);
+      addMesh(new THREE.BoxGeometry(2.4, 0.55, 0.08), teak, s * 3.7, D + 0.8, z + 0.23, root);
+      for (const dx of [-0.9, 0.9]) addMesh(new THREE.BoxGeometry(0.08, 0.5, 0.45), navy, s * 3.7 + dx, D + 0.25, z, root);
+      obstacle(s * 3.7 - 1.25, s * 3.7 + 1.25, z - 0.3, z + 0.3, 1.1);
+    }
+    // Ramp lifting cables and reinforced hinges.
+    pipe([[s * 3.1, D + 0.2, -22.5], [s * 3.1, D + 4.4, -22]], 0.025, railM);
+    addMesh(new THREE.CylinderGeometry(0.15, 0.15, 0.65, 12), navy, s * 2.8, D + 0.1, -22.5, root).rotation.z = Math.PI / 2;
+  }
+  // Funnel, ventilation cowls and communication aerials complete the silhouette.
+  addMesh(new RoundedBoxGeometry(1.35, 2.5, 1.6, 2, 0.12), navy, -2.6, D + 4.1, 15, root);
+  addMesh(new THREE.BoxGeometry(1.42, 0.35, 1.67), MAT_BLACK(), -2.6, D + 5.25, 15, root);
+  for (const x of [-3, 3]) {
+    addMesh(new THREE.CylinderGeometry(0.22, 0.22, 0.8, 12), steel, x, D + 3.3, 12.5, root);
+    addMesh(new THREE.SphereGeometry(0.3, 12, 8), steel, x, D + 3.7, 12.5, root);
+  }
+  for (const x of [-1.6, 1.6]) addMesh(new THREE.CylinderGeometry(0.015, 0.035, 2.4, 6), railM, x, D + 6.2, 15, root);
+  // White lane markings lead into the larger open loading area.
+  for (const x of [-1.7, 1.7]) for (let z = -19; z < -10; z += 2) addMesh(new THREE.BoxGeometry(0.09, 0.008, 1), steel, x, D + 0.01, z, root, false);
+}
 function MAT_BLACK() { return _black || (_black = new THREE.MeshStandardMaterial({ color: 0x1b1d1f, roughness: 0.6, metalness: 0.3 })); }
 
 // float the boat on the CPU sea
 function updateBoat(dt, t) {
-  const L = 13, W = 3.6;
+  const L = BOAT.len * 0.38, W = BOAT.beam * 0.39;
   const hb = seaHeight(0, -L, t), hs = seaHeight(0, L, t), hp = seaHeight(-W, 0, t), hsb = seaHeight(W, 0, t), hc = seaHeight(0, 0, t);
   const heave = (hb + hs + hp + hsb + hc * 2) / 6 * 0.95;
   const pitch = Math.atan2(hb - hs, 2 * L) * 0.8;

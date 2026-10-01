@@ -1,6 +1,7 @@
 # Sukkah at Sea · סוכה בים
 
 A 3D halacha simulator: a sukkah built on a pickup truck, parked on a car ferry off the coast of Tel Aviv–Yafo.
+The 48-metre ferry has a 12-metre beam, an open loading foredeck, an aft passenger terrace, rescue boats, mooring bitts, hull portholes, docking fenders and a reinforced raised bow ramp.
 Change anything, and ~30 halachot of sukkah are checked live, each with its source.
 
 **▶ Play it:** https://grapp-rapp.github.io/sukkah-at-sea/
