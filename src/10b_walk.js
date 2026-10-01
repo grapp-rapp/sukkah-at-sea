@@ -6,6 +6,7 @@ const STEP = 0.43, RADIUS = 0.28, EYE = 1.64;
 function box(x0, x1, z0, z1, y0, y1, tag) { WALK.boxes.push({ x0: Math.min(x0, x1), x1: Math.max(x0, x1), z0: Math.min(z0, z1), z1: Math.max(z0, z1), y0, y1, tag }); }
 function rebuildWalkColliders() {
   WALK.boxes = [];
+  for (const b of BOAT.obstacles) box(...b);
   // wheelhouse cabin (world z 11.6 .. 17.0), doorway at x -0.5..0.5
   box(-3.7, -0.5, 11.55, 11.65, 0, 2.6); box(0.5, 3.7, 11.55, 11.65, 0, 2.6);
   box(-3.7, 3.7, 16.95, 17.05, 0, 2.6); box(-3.75, -3.65, 11.6, 17, 0, 2.6); box(3.65, 3.75, 11.6, 17, 0, 2.6);
@@ -64,7 +65,7 @@ function blocked(x, z, feet) {
   // stay aboard: the hull railings on the main deck, the bow ramp, the stern
   if (feet < -1) { if (Math.abs(x) > BELOW.x - 0.3 || z < BELOW.z0 + 0.3 || z > BELOW.z1 - 0.3) return true; }
   else if (feet < 2) {
-    if (z < -11.6 || z > 16.7) return true;
+    if (z < -21.9 || z > BOAT.stern - 0.5) return true;
     if (Math.abs(x) > HULL_W(z) - 0.42) return true;
   }
   return false;

@@ -111,7 +111,7 @@ function setCam(mode) {
   camMode = mode; document.querySelectorAll('#cam button').forEach((b) => b.classList.toggle('on', b.dataset.c === mode));
   controls.enabled = mode === 'orbit' || mode === 'sea';
   if (mode === 'orbit') frameOrbit();
-  if (mode === 'sea') { controls.target.set(0, 3, 0); camera.position.set(-38, 7, -26); }
+  if (mode === 'sea') { controls.target.set(0, 3, -2); camera.position.set(-48, 12, -36); }
   if (mode === 'inside') { LOOK.yaw = 0; LOOK.pitch = 0.35; }
   if (mode === 'deck') { LOOK.yaw = Math.PI * 1.25; LOOK.pitch = 0.05; }
   $('hint').textContent = tr(HINTS[mode]);
@@ -189,7 +189,7 @@ async function boot() {
   await loadStep(0.05, tt('Mixing the paint', 'מערבבים צבע'));
   await buildTextures();
   buildSky();
-  sunLight.shadow.camera.left = -14; sunLight.shadow.camera.right = 14; sunLight.shadow.camera.top = 14; sunLight.shadow.camera.bottom = -14;
+  sunLight.shadow.camera.left = -30; sunLight.shadow.camera.right = 30; sunLight.shadow.camera.top = 30; sunLight.shadow.camera.bottom = -30;
   sunLight.target.position.set(0, 2, 2);
   await loadStep(0.4, tt('Filling the Mediterranean', 'ממלאים את הים התיכון'));
   buildOcean(); buildCoast(); setSeaState(CFG.wind, CFG.boat === 'sailing');
